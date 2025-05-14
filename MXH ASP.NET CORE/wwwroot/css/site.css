@@ -1,22 +1,170 @@
+/* 1. Thiết lập cơ bản cho toàn trang */
 html {
-  font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  margin-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* 2. Header Styles */
+.navbar {
+    background-color: #ffffff !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    padding: 0.5rem 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    color: #1877f2 !important;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* 3. Search Box */
+.search-box {
+    background-color: #f0f2f5;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    width: 240px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    color: #65676b;
+}
+
+.search-box i {
+    color: #65676b;
+}
+
+/* 4. Navigation Icons */
+.nav-icons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.nav-icon {
+    font-size: 1.25rem;
+    color: #65676b;
+    padding: 0.5rem;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.nav-icon:hover {
+    background-color: #f2f2f2;
+}
+
+/* 5. User Menu */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    border-radius: 8px;
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    color: #1c1e21;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f2f5;
+}
+
+.dropdown-item i {
+    width: 20px;
+    color: #65676b;
+}
+
+/* 6. Buttons */
+.btn-primary {
+    background-color: #1877f2;
+    border-color: #1877f2;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+}
+
+.btn-primary:hover {
+    background-color: #166fe5;
+    border-color: #166fe5;
+}
+
+.btn-outline-primary {
+    color: #1877f2;
+    border-color: #1877f2;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+}
+
+.btn-outline-primary:hover {
+    background-color: #e7f3ff;
+    color: #1877f2;
+    border-color: #1877f2;
+}
+
+/* 7. Main Content */
+main {
+    flex: 1;
+    padding-top: 60px; /* Để tránh bị header che mất nội dung */
+    padding-bottom: 1rem;
+}
+
+/* 8. Responsive Design */
+@media (max-width: 992px) {
+    .search-box {
+        width: 180px;
+    }
+    
+    .nav-icons {
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-box {
+        display: none;
+    }
+    
+    .nav-icons {
+        display: none;
+    }
+    
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
 }

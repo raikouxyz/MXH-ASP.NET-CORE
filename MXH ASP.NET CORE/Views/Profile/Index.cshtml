@@ -1,0 +1,94 @@
+﻿@model MXH_ASP.NET_CORE.ViewModels.UserProfileViewModel
+
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) 
+                        ? "/images/default-avatar.png" 
+                        : $"/uploads/profile/{Model.ProfilePicture}")" 
+                         class="rounded-circle mb-3" 
+                         style="width: 150px; height: 150px; object-fit: cover;"
+                         alt="Ảnh đại diện" />
+                    <h4 class="card-title">@Model.FullName</h4>
+                    <p class="text-muted">@Model.Username</p>
+                    <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Chỉnh sửa thông tin
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">Thông tin chi tiết</h5>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>@Html.DisplayNameFor(m => m.Username)</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.Username
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>@Html.DisplayNameFor(m => m.Email)</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.Email
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>@Html.DisplayNameFor(m => m.FullName)</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.FullName
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>@Html.DisplayNameFor(m => m.CreatedAt)</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>@Html.DisplayNameFor(m => m.LastLoginAt)</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            @(Model.LastLoginAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tự động ẩn thông báo sau 5 giây
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
+} 

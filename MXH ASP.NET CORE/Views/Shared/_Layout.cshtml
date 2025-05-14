@@ -1,52 +1,107 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - MXH_ASP.NET_CORE</title>
+    <title>@ViewData["Title"] - VibeNet</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/MXH_ASP.NET_CORE.styles.css" asp-append-version="true" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">MXH_ASP.NET_CORE</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
+                <!-- Logo -->
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                    <i class="fab fa-facebook"></i> VibeNet
+                </a>
+
+                <!-- Search Box -->
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Tìm kiếm trên VibeNet" />
+                </div>
+
+                <!-- Navigation Icons -->
+                <div class="nav-icons">
+                    <a href="#" class="nav-icon" title="Trang chủ">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    <a href="#" class="nav-icon" title="Watch">
+                        <i class="fas fa-tv"></i>
+                    </a>
+                    <a href="#" class="nav-icon" title="Marketplace">
+                        <i class="fas fa-store"></i>
+                    </a>
+                    <a href="#" class="nav-icon" title="Nhóm">
+                        <i class="fas fa-users"></i>
+                    </a>
+                    <a href="#" class="nav-icon" title="Game">
+                        <i class="fas fa-gamepad"></i>
+                    </a>
+                </div>
+
+                <!-- User Menu -->
+                <div class="user-menu">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                               id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                @{
+                                    var profilePicture = User.FindFirst("ProfilePicture")?.Value;
+                                    var imagePath = string.IsNullOrEmpty(profilePicture) 
+                                        ? "/images/default-avatar.png" 
+                                        : $"/uploads/profile/{profilePicture}";
+                                }
+                                <img src="@imagePath" 
+                                     alt="Avatar" 
+                                     class="user-avatar me-2"
+                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                                <span class="text-dark">@User.Identity.Name</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                        <i class="fas fa-user"></i>Trang cá nhân
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="fas fa-cog"></i>Cài đặt
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt"></i>Đăng xuất
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary me-2">Đăng nhập</a>
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary">Đăng ký</a>
+                    }
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - MXH_ASP.NET_CORE - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

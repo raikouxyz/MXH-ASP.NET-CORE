@@ -3,9 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MXH_ASP.NET_CORE.Models
 {
-    /// <summary>
-    /// Model đại diện cho bình luận trong hệ thống
-    /// </summary>
+    
     public class Comment
     {
         [Key]
