@@ -32,6 +32,41 @@ namespace MXH_ASP.NET_CORE.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
 
+            // Cấu hình mối quan hệ Post - User
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình mối quan hệ Comment - User
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình mối quan hệ Comment - Post
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Cấu hình mối quan hệ Like - User
+            modelBuilder.Entity<Like>()
+                .HasOne(l => l.User)
+                .WithMany()
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình mối quan hệ Like - Post
+            modelBuilder.Entity<Like>()
+                .HasOne(l => l.Post)
+                .WithMany(p => p.Likes)
+                .HasForeignKey(l => l.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Cấu hình mối quan hệ Friendship
             modelBuilder.Entity<Friendship>()
                 .HasOne(f => f.Requester)
@@ -45,7 +80,7 @@ namespace MXH_ASP.NET_CORE.Data
                 .HasForeignKey(f => f.AddresseeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Cấu hình mối quan hệ Like
+            // Cấu hình unique index cho Like
             modelBuilder.Entity<Like>()
                 .HasIndex(l => new { l.UserId, l.PostId })
                 .IsUnique();
