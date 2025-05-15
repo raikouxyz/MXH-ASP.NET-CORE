@@ -19,8 +19,8 @@
             <div class="card">
                 <div class="card-body text-center">
                     <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) 
-                        ? "/images/default-avatar.png" 
-                        : $"/uploads/profile/{Model.ProfilePicture}")" 
+                        ? "/uploads/avatars/default-avatar.svg" 
+                        : Model.ProfilePicture)" 
                          class="rounded-circle mb-3" 
                          style="width: 150px; height: 150px; object-fit: cover;"
                          alt="Ảnh đại diện" />

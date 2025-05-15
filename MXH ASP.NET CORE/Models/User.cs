@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MXH_ASP.NET_CORE.Models
 {
@@ -23,6 +23,10 @@ namespace MXH_ASP.NET_CORE.Models
 
         [StringLength(100)]
         public string FullName { get; set; }
+
+        [StringLength(15)]
+        [Phone]
+        public string PhoneNumber { get; set; }
 
         public string? ProfilePicture { get; set; }
 

@@ -25,6 +25,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
+// Đăng ký dịch vụ SMS
+builder.Services.AddScoped<MXH_ASP.NET_CORE.Services.ISmsSender, MXH_ASP.NET_CORE.Services.FakeSmsSender>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

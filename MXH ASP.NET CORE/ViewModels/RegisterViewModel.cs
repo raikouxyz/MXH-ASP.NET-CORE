@@ -25,7 +25,11 @@ namespace MXH_ASP.NET_CORE.ViewModels
         [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; }
 
+        [Required(ErrorMessage = "Vui lòng nhập số điện thoại")]
+        [RegularExpression(@"^(0[0-9]{9,10})$", ErrorMessage = "Số điện thoại không hợp lệ (phải bắt đầu bằng số 0 và có 10-11 chữ số)")]
+        public string PhoneNumber { get; set; }
+
         [StringLength(100)]
         public string FullName { get; set; }
     }
-} 
+}

@@ -1,0 +1,34 @@
+@model MXH_ASP.NET_CORE.ViewModels.CreatePostViewModel
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form asp-controller="Post" asp-action="Create" method="post">
+            <div class="d-flex mb-3">
+                <img src="@(string.IsNullOrEmpty(User.FindFirst("ProfilePicture")?.Value) ? "/uploads/avatars/default-avatar.svg" : User.FindFirst("ProfilePicture")?.Value)" 
+                     class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">
+                <div class="form-floating flex-grow-1">
+                    <textarea asp-for="Content" class="form-control" placeholder="Bạn đang nghĩ gì?" style="height: 80px; border-radius: 20px;"></textarea>
+                    <label asp-for="Content">Bạn đang nghĩ gì?</label>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <div class="d-flex justify-content-between">
+                <div>
+                    <!-- Có thể thêm các nút đính kèm ảnh, emoji ở đây -->
+                    <button type="button" class="btn btn-light rounded-circle" title="Thêm ảnh" disabled>
+                        <i class="bi bi-image"></i>
+                    </button>
+                    <button type="button" class="btn btn-light rounded-circle" title="Thêm emoji" disabled>
+                        <i class="bi bi-emoji-smile"></i>
+                    </button>
+                </div>
+                <button type="submit" class="btn btn-primary px-4 rounded-pill">
+                    <i class="bi bi-send-fill me-1"></i> Đăng
+                </button>
+            </div>
+        </form>
+    </div>
+</div> 

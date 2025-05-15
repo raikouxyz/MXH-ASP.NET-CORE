@@ -1,0 +1,105 @@
+@model MXH_ASP.NET_CORE.ViewModels.PostViewModel
+
+<div class="card shadow-sm mb-4 post-card" id="post-@Model.Id">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">
+        <div class="d-flex align-items-center">
+            <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) ? "/uploads/avatars/default-avatar.svg" : Model.ProfilePicture)" 
+                class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">
+            <div>
+                <h6 class="mb-0 fw-bold">@Model.UserFullName</h6>
+                <small class="text-muted">
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <span title="Đã chỉnh sửa vào @Model.UpdatedAt.Value.ToString("HH:mm dd/MM/yyyy")">
+                            @Model.CreatedAt.ToString("HH:mm dd/MM/yyyy") (đã chỉnh sửa)
+                        </span>
+                    }
+                    else
+                    {
+                        @Model.CreatedAt.ToString("HH:mm dd/MM/yyyy")
+                    }
+                </small>
+            </div>
+        </div>
+
+        @if (Model.CanEdit || Model.CanDelete)
+        {
+            <div class="dropdown">
+                <button class="btn btn-light btn-sm rounded-circle" type="button" id="dropdownMenuButton-@Model.Id" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-@Model.Id">
+                    @if (Model.CanEdit)
+                    {
+                        <li><a class="dropdown-item" href="@Url.Action("Edit", "Post", new { id = Model.Id })"><i class="bi bi-pencil-square me-2"></i> Chỉnh sửa</a></li>
+                    }
+                    @if (Model.CanDelete)
+                    {
+                        <li>
+                            <form asp-controller="Post" asp-action="Delete" method="post" class="d-inline"
+                                onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-trash me-2"></i> Xóa
+                                </button>
+                            </form>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+
+    <div class="card-body">
+        <p class="card-text">@Model.Content</p>
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
+        }
+
+        <div class="d-flex justify-content-between text-muted small mb-2">
+            <div>
+                @if (Model.LikeCount > 0)
+                {
+                    <span><i class="bi bi-hand-thumbs-up-fill text-primary"></i> @Model.LikeCount</span>
+                }
+            </div>
+            <div>
+                @if (Model.CommentCount > 0)
+                {
+                    <span>@Model.CommentCount bình luận</span>
+                }
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="d-flex justify-content-around">
+            <button class="btn btn-light flex-fill me-1 @(Model.IsLiked ? "text-primary" : "")" id="likeBtn-@Model.Id" onclick="likePost(@Model.Id)">
+                <i class="bi @(Model.IsLiked ? "bi-hand-thumbs-up-fill" : "bi-hand-thumbs-up")"></i> Thích
+            </button>
+            <button class="btn btn-light flex-fill ms-1" id="commentBtn-@Model.Id" onclick="focusComment(@Model.Id)">
+                <i class="bi bi-chat"></i> Bình luận
+            </button>
+        </div>
+
+        <hr>
+
+        <div class="comments-section" id="comments-@Model.Id">
+            <!-- Hiển thị các bình luận ở đây -->
+        </div>
+
+        <div class="d-flex mt-3">
+            <img src="@(string.IsNullOrEmpty(User.FindFirst("ProfilePicture")?.Value) ? "/uploads/avatars/default-avatar.svg" : User.FindFirst("ProfilePicture")?.Value)" 
+                 class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">
+            <div class="flex-grow-1">
+                <div class="input-group">
+                    <input type="text" class="form-control rounded-pill" placeholder="Viết bình luận..." id="commentInput-@Model.Id">
+                    <button class="btn btn-primary rounded-circle ms-2" type="button" onclick="addComment(@Model.Id)">
+                        <i class="bi bi-send-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

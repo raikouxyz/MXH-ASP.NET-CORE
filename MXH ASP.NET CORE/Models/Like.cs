@@ -12,18 +12,23 @@ namespace MXH_ASP.NET_CORE.Models
         public int Id { get; set; }
 
         [Required]
-        public int UserId { get; set; }
-
-        [Required]
         public int PostId { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Required]
+        public int UserId { get; set; }
+
+        public DateTime CreatedAt { get; set; }
 
         // Navigation properties
-        [ForeignKey("UserId")]
-        public virtual User User { get; set; }
-
         [ForeignKey("PostId")]
-        public virtual Post Post { get; set; }
+        public Post Post { get; set; }
+
+        [ForeignKey("UserId")]
+        public User User { get; set; }
+
+        public Like()
+        {
+            CreatedAt = DateTime.UtcNow;
+        }
     }
 } 

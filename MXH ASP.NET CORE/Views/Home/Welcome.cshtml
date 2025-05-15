@@ -1,0 +1,78 @@
+@{
+    ViewData["Title"] = "Chào mừng đến với VibeNet";
+}
+
+<div class="welcome-container">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="welcome-text">
+                <h1 class="display-4 fw-bold mb-4">Chào mừng đến với VibeNet</h1>
+                <p class="lead mb-4">Kết nối với bạn bè, chia sẻ khoảnh khắc, và khám phá thông tin mới mỗi ngày.</p>
+                <div class="d-grid gap-2 d-md-flex">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg px-4 me-md-2">Đăng ký ngay</a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-lg px-4">Đăng nhập</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <img src="/images/welcome-illustration.svg" alt="Welcome Illustration" class="img-fluid welcome-image" onerror="this.src='/images/default-welcome.png'; this.onerror=null;">
+        </div>
+    </div>
+
+    <div class="row mt-5 pt-5">
+        <div class="col-md-4 mb-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h3>Kết nối</h3>
+                <p>Tìm kiếm và kết nối với bạn bè, gia đình và những người có cùng sở thích.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-share-alt fa-3x text-primary"></i>
+                </div>
+                <h3>Chia sẻ</h3>
+                <p>Chia sẻ những khoảnh khắc, suy nghĩ và trải nghiệm của bạn với cộng đồng.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="feature-card text-center p-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                </div>
+                <h3>An toàn</h3>
+                <p>Dữ liệu của bạn luôn được bảo vệ với các tính năng bảo mật tiên tiến.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-container {
+        padding: 3rem 0;
+    }
+    
+    .welcome-text {
+        padding: 2rem 0;
+    }
+    
+    .feature-card {
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .welcome-image {
+        max-height: 500px;
+    }
+</style> 

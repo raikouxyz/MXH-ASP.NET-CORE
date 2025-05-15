@@ -1,0 +1,79 @@
+@model MXH_ASP.NET_CORE.ViewModels.VerifyOtpViewModel
+
+@{
+    ViewData["Title"] = "Xác thực mã OTP";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">@ViewData["Title"]</h3>
+            </div>
+            <div class="card-body">
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        @TempData["SuccessMessage"]
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <p class="text-center mb-4">
+                    Chúng tôi đã gửi mã xác thực đến số điện thoại <strong>@Model.PhoneNumber</strong><br />
+                    Vui lòng nhập mã xác thực để tiếp tục
+                </p>
+                
+                <form asp-action="VerifyOtp" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <input asp-for="PhoneNumber" type="hidden" />
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="OtpCode" class="control-label"></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-key"></i></span>
+                            <input asp-for="OtpCode" class="form-control" placeholder="Nhập mã 6 chữ số" maxlength="6" autocomplete="off" />
+                        </div>
+                        <span asp-validation-for="OtpCode" class="text-danger"></span>
+                        <small class="form-text text-muted">Mã xác thực có hiệu lực trong vòng 5 phút</small>
+                    </div>
+
+                    <div class="form-group text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check me-2"></i>Xác nhận
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-3 text-center">
+                    <p>Không nhận được mã?</p>
+                    <form asp-action="ResendOtp" method="post">
+                        <input type="hidden" name="phoneNumber" value="@Model.PhoneNumber" />
+                        <button type="submit" class="btn btn-link">Gửi lại mã</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-footer text-center">
+                <p>Quay lại <a asp-action="Login">Đăng nhập</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Tự động focus vào ô nhập mã OTP
+        $(document).ready(function() {
+            $('#OtpCode').focus();
+            
+            // Tự động ẩn thông báo thành công sau 5 giây
+            setTimeout(function() {
+                $('.alert-success').alert('close');
+            }, 5000);
+        });
+    </script>
+} 

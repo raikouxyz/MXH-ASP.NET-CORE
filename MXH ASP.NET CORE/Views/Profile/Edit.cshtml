@@ -36,8 +36,8 @@
                             <label class="form-label">Ảnh đại diện</label>
                             <div class="d-flex align-items-center gap-3">
                                 <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) 
-                                    ? "/images/default-avatar.png" 
-                                    : $"/uploads/profile/{Model.ProfilePicture}")" 
+                                    ? "/uploads/avatars/default-avatar.svg" 
+                                    : Model.ProfilePicture)" 
                                      class="rounded-circle" 
                                      style="width: 100px; height: 100px; object-fit: cover;"
                                      alt="Ảnh đại diện" />
