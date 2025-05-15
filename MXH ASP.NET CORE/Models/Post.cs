@@ -12,12 +12,13 @@ namespace MXH_ASP.NET_CORE.Models
         public int Id { get; set; }
 
         [Required]
+        [MaxLength(5000)]
         public string Content { get; set; }
 
         public string? ImageUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+        public DateTime CreatedAt { get; set; }
+        
         public DateTime? UpdatedAt { get; set; }
 
         // Foreign key
@@ -26,8 +27,15 @@ namespace MXH_ASP.NET_CORE.Models
 
         // Navigation properties
         [ForeignKey("UserId")]
-        public virtual User User { get; set; }
-        public virtual ICollection<Comment> Comments { get; set; }
-        public virtual ICollection<Like> Likes { get; set; }
+        public User User { get; set; }
+        public ICollection<Comment> Comments { get; set; }
+        public ICollection<Like> Likes { get; set; }
+
+        public Post()
+        {
+            Comments = new List<Comment>();
+            Likes = new List<Like>();
+            CreatedAt = DateTime.UtcNow;
+        }
     }
 } 

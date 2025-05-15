@@ -52,8 +52,8 @@
                                 @{
                                     var profilePicture = User.FindFirst("ProfilePicture")?.Value;
                                     var imagePath = string.IsNullOrEmpty(profilePicture) 
-                                        ? "/images/default-avatar.png" 
-                                        : $"/uploads/profile/{profilePicture}";
+                                        ? "/uploads/avatars/default-avatar.svg" 
+                                        : profilePicture;
                                 }
                                 <img src="@imagePath" 
                                      alt="Avatar" 

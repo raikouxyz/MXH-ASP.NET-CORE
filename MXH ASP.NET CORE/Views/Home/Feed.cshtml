@@ -1,0 +1,546 @@
+@model MXH_ASP.NET_CORE.ViewModels.CreatePostViewModel
+
+@{
+    ViewData["Title"] = "Bảng tin";
+    var profilePicture = string.IsNullOrEmpty(User.FindFirst("ProfilePicture")?.Value) ? "/uploads/avatars/default-avatar.svg" : User.FindFirst("ProfilePicture")?.Value;
+    var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<input type="hidden" id="current-user-avatar" value="@profilePicture" />
+
+<div class="row mt-4">
+    <!-- Cột trái - Menu nhanh và shortcuts -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link ps-0 text-dark">
+                            <i class="fas fa-user-circle fa-lg me-3 text-primary"></i>
+                            @User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link ps-0 text-dark">
+                            <i class="fas fa-users fa-lg me-3 text-info"></i>
+                            Bạn bè
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link ps-0 text-dark">
+                            <i class="fas fa-bookmark fa-lg me-3 text-warning"></i>
+                            Đã lưu
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a href="#" class="nav-link ps-0 text-dark">
+                            <i class="fas fa-history fa-lg me-3 text-secondary"></i>
+                            Kỷ niệm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-controller="Profile" asp-action="Index" class="nav-link ps-0 text-dark">
+                            <i class="fas fa-user-cog fa-lg me-3 text-danger"></i>
+                            Trang cá nhân
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cột giữa - Danh sách bài viết -->
+    <div class="col-lg-6">
+        <!-- Kiểm tra thông báo thành công -->
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Kiểm tra thông báo lỗi -->
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Form tạo bài viết mới -->
+        <partial name="_CreatePostPartial" model="Model" />
+
+        <!-- Danh sách bài viết -->
+        <div id="posts-container">
+            <!-- Nội dung bài viết sẽ được tải bằng Ajax -->
+            <div class="text-center py-5" id="loading-spinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Đang tải...</span>
+                </div>
+                <p class="mt-2">Đang tải bài viết...</p>
+            </div>
+        </div>
+
+        <!-- Nút tải thêm -->
+        <div class="text-center my-4" id="load-more-container" style="display: none;">
+            <button class="btn btn-light border" id="load-more-btn" onclick="loadMorePosts()">
+                <i class="fas fa-sync-alt me-2"></i> Tải thêm bài viết
+            </button>
+        </div>
+    </div>
+
+    <!-- Cột phải - Đề xuất bạn bè và quảng cáo -->
+    <div class="col-lg-3 d-none d-lg-block">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Đề xuất kết bạn</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small text-center py-3">
+                    Chưa có đề xuất kết bạn nào.
+                </p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Hoạt động gần đây</h6>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small text-center py-3">
+                    Chưa có hoạt động nào gần đây.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Biến toàn cục để theo dõi trạng thái phân trang
+        let currentPage = 1;
+        const pageSize = 5;
+        let hasMorePosts = true;
+        
+        // Tự động tải bài viết khi trang được tải
+        $(document).ready(function() {
+            loadPosts();
+            
+            // Tự động đóng thông báo sau 5 giây
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+        
+        // Hàm tải bài viết
+        function loadPosts() {
+            $.ajax({
+                url: '@Url.Action("GetPosts", "Post")',
+                type: 'GET',
+                data: {
+                    page: currentPage,
+                    pageSize: pageSize
+                },
+                success: function(data) {
+                    // Ẩn loading spinner
+                    $('#loading-spinner').hide();
+                    
+                    // Kiểm tra nếu không có bài viết nào
+                    if (data.length === 0) {
+                        if (currentPage === 1) {
+                            $('#posts-container').html('<div class="text-center py-5"><p class="text-muted">Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!</p></div>');
+                        }
+                        hasMorePosts = false;
+                    } else {
+                        // Render các bài viết
+                        data.forEach(function(post) {
+                            renderPost(post);
+                        });
+                        
+                        // Kiểm tra nếu còn bài viết để tải
+                        if (data.length < pageSize) {
+                            hasMorePosts = false;
+                        } else {
+                            $('#load-more-container').show();
+                        }
+                    }
+                    
+                    // Cập nhật hiển thị nút tải thêm
+                    updateLoadMoreButton();
+                },
+                error: function(error) {
+                    $('#loading-spinner').hide();
+                    $('#posts-container').html('<div class="alert alert-danger">Không thể tải bài viết. Vui lòng thử lại sau.</div>');
+                    console.error('Error fetching posts:', error);
+                }
+            });
+        }
+        
+        // Hàm render bài viết
+        function renderPost(post) {
+            const postHtml = `
+                <div class="card shadow-sm mb-4 post-card" id="post-${post.id}">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <img src="${post.profilePicture || '/uploads/avatars/default-avatar.svg'}" 
+                                class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0 fw-bold">${post.userFullName}</h6>
+                                <small class="text-muted">
+                                    ${post.updatedAt 
+                                        ? `<span title="Đã chỉnh sửa vào ${new Date(post.updatedAt).toLocaleString('vi-VN')}">
+                                            ${new Date(post.createdAt).toLocaleString('vi-VN')} (đã chỉnh sửa)
+                                           </span>` 
+                                        : new Date(post.createdAt).toLocaleString('vi-VN')}
+                                </small>
+                            </div>
+                        </div>
+
+                        ${(post.canEdit || post.canDelete) ? `
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm rounded-circle" type="button" id="dropdownMenuButton-${post.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-${post.id}">
+                                ${post.canEdit ? `<li><a class="dropdown-item" href="/Post/Edit/${post.id}"><i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa</a></li>` : ''}
+                                ${post.canDelete ? `
+                                <li>
+                                    <form action="/Post/Delete" method="post" class="d-inline"
+                                        onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
+                                        <input type="hidden" name="id" value="${post.id}" />
+                                        <input type="hidden" name="__RequestVerificationToken" value="${$('input[name="__RequestVerificationToken"]').val()}" />
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash-alt me-2"></i> Xóa
+                                        </button>
+                                    </form>
+                                </li>` : ''}
+                            </ul>
+                        </div>` : ''}
+                    </div>
+
+                    <div class="card-body">
+                        <p class="card-text">${post.content}</p>
+                        ${post.imageUrl ? `<img src="${post.imageUrl}" class="img-fluid rounded mb-3" alt="Post image">` : ''}
+
+                        <div class="d-flex justify-content-between text-muted small mb-2">
+                            <div>
+                                ${post.likeCount > 0 ? `<span><i class="fas fa-thumbs-up text-primary"></i> ${post.likeCount}</span>` : ''}
+                            </div>
+                            <div>
+                                ${post.commentCount > 0 ? `<span>${post.commentCount} bình luận</span>` : ''}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-around">
+                            <button class="btn btn-light flex-fill me-1 ${post.isLiked ? 'text-primary' : ''}" id="likeBtn-${post.id}" onclick="likePost(${post.id})">
+                                <i class="fas ${post.isLiked ? 'fa-thumbs-up-fill' : 'fa-thumbs-up'}"></i> Thích
+                            </button>
+                            <button class="btn btn-light flex-fill ms-1" id="commentBtn-${post.id}" onclick="focusComment(${post.id})">
+                                <i class="fas fa-comment"></i> Bình luận
+                            </button>
+                        </div>
+
+                        <hr>
+
+                        <div class="comments-section" id="comments-${post.id}">
+                            <!-- Hiển thị các bình luận ở đây -->
+                        </div>
+
+                        <div class="d-flex mt-3">
+                            <img src="@profilePicture" 
+                                 class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">
+                            <div class="flex-grow-1">
+                                <div class="input-group">
+                                    <input type="text" class="form-control rounded-pill" placeholder="Viết bình luận..." id="commentInput-${post.id}">
+                                    <button class="btn btn-primary rounded-circle ms-2" type="button" onclick="addComment(${post.id})">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            $('#posts-container').append(postHtml);
+        }
+        
+        // Hàm tải thêm bài viết
+        function loadMorePosts() {
+            if (!hasMorePosts) return;
+            
+            currentPage++;
+            
+            // Hiển thị loading
+            $('#load-more-btn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang tải...');
+            
+            // Tải bài viết mới
+            loadPosts();
+        }
+        
+        // Cập nhật trạng thái nút tải thêm
+        function updateLoadMoreButton() {
+            if (hasMorePosts) {
+                $('#load-more-btn').html('<i class="fas fa-sync-alt me-2"></i> Tải thêm bài viết');
+                $('#load-more-container').show();
+            } else {
+                $('#load-more-container').hide();
+            }
+        }
+        
+        // Hàm yêu thích bài viết
+        function likePost(postId) {
+            $.ajax({
+                url: `/api/Like/${postId}`,
+                type: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Cập nhật UI
+                        const likeBtn = $(`#likeBtn-${postId}`);
+                        const likeIcon = likeBtn.find('i');
+                        
+                        if (data.liked) {
+                            likeBtn.addClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-up-fill');
+                        } else {
+                            likeBtn.removeClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up-fill').addClass('fa-thumbs-up');
+                        }
+                        
+                        // Cập nhật số lượt thích
+                        const likeCountElem = $(`#post-${postId} .card-body > .d-flex.justify-content-between.text-muted.small.mb-2 > div:first-child`);
+                        if (data.likeCount > 0) {
+                            likeCountElem.html(`<span><i class="fas fa-thumbs-up text-primary"></i> ${data.likeCount}</span>`);
+                        } else {
+                            likeCountElem.html('');
+                        }
+                    } else {
+                        console.error('Error liking post:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error liking post:', error);
+                }
+            });
+        }
+        
+        // Hàm focus vào ô comment
+        function focusComment(postId) {
+            loadComments(postId);
+            $(`#commentInput-${postId}`).focus();
+        }
+        
+        // Hàm tải bình luận
+        function loadComments(postId) {
+            $.ajax({
+                url: `/api/Comment/post/${postId}`,
+                type: 'GET',
+                success: function(data) {
+                    if (data.success) {
+                        const commentsSection = $(`#comments-${postId}`);
+                        commentsSection.empty();
+                        
+                        // Nếu không có bình luận
+                        if (data.comments.length === 0) {
+                            commentsSection.html('<p class="text-muted text-center small my-2">Chưa có bình luận nào.</p>');
+                            return;
+                        }
+                        
+                        // Render bình luận
+                        data.comments.forEach(function(comment) {
+                            const commentHtml = `
+                                <div class="comment d-flex mb-2" id="comment-${comment.id}">
+                                    <img src="${comment.profilePicture || '/uploads/avatars/default-avatar.svg'}" 
+                                         class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div class="comment-content p-2 rounded bg-light flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0 fw-bold">${comment.userFullName}</h6>
+                                            ${(comment.canEdit || comment.canDelete) ? `
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-h"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    ${comment.canEdit ? `
+                                                    <li><button class="dropdown-item" onclick="editComment(${comment.id}, '${comment.content.replace(/'/g, "\\'")}')">
+                                                        <i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa
+                                                    </button></li>` : ''}
+                                                    ${comment.canDelete ? `
+                                                    <li><button class="dropdown-item text-danger" onclick="deleteComment(${comment.id})">
+                                                        <i class="fas fa-trash-alt me-2"></i> Xóa
+                                                    </button></li>` : ''}
+                                                </ul>
+                                            </div>` : ''}
+                                        </div>
+                                        <p class="mb-0 comment-text">${comment.content}</p>
+                                        <small class="text-muted">
+                                            ${comment.updatedAt 
+                                                ? `<span title="Đã chỉnh sửa vào ${new Date(comment.updatedAt).toLocaleString('vi-VN')}">
+                                                    ${new Date(comment.createdAt).toLocaleString('vi-VN')} (đã chỉnh sửa)
+                                                   </span>` 
+                                                : new Date(comment.createdAt).toLocaleString('vi-VN')}
+                                        </small>
+                                    </div>
+                                </div>
+                            `;
+                            commentsSection.append(commentHtml);
+                        });
+                        
+                        // Cập nhật số lượng bình luận
+                        const commentCountElem = $(`#post-${postId} .card-body > .d-flex.justify-content-between.text-muted.small.mb-2 > div:last-child`);
+                        commentCountElem.html(`<span>${data.comments.length} bình luận</span>`);
+                    } else {
+                        console.error('Error loading comments:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading comments:', error);
+                    $(`#comments-${postId}`).html('<p class="text-danger">Không thể tải bình luận. Vui lòng thử lại sau.</p>');
+                }
+            });
+        }
+        
+        // Hàm thêm bình luận
+        function addComment(postId) {
+            const commentText = $(`#commentInput-${postId}`).val().trim();
+            if (!commentText) return;
+            
+            $.ajax({
+                url: '/api/Comment',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: commentText,
+                    postId: postId
+                }),
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Xóa nội dung input
+                        $(`#commentInput-${postId}`).val('');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error adding comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error adding comment:', error);
+                }
+            });
+        }
+        
+        // Hàm chỉnh sửa bình luận
+        function editComment(commentId, content) {
+            // Hiển thị modal chỉnh sửa
+            if (!$('#editCommentModal').length) {
+                $('body').append(`
+                    <div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Chỉnh sửa bình luận</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <textarea id="editCommentContent" class="form-control" rows="3"></textarea>
+                                    <input type="hidden" id="editCommentId" />
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                    <button type="button" class="btn btn-primary" onclick="updateComment()">Lưu thay đổi</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+            
+            $('#editCommentId').val(commentId);
+            $('#editCommentContent').val(content);
+            
+            // Hiển thị modal
+            var modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+            modal.show();
+        }
+        
+        // Hàm cập nhật bình luận
+        function updateComment() {
+            const commentId = $('#editCommentId').val();
+            const content = $('#editCommentContent').val().trim();
+            
+            if (!content) return;
+            
+            $.ajax({
+                url: `/api/Comment/${commentId}`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: content,
+                    postId: 0 // Không quan trọng trong trường hợp cập nhật
+                }),
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Đóng modal
+                        $('#editCommentModal').modal('hide');
+                        
+                        // Tìm bài viết của bình luận này
+                        const post = $(`#comment-${commentId}`).closest('.post-card');
+                        const postId = post.attr('id').replace('post-', '');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error updating comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error updating comment:', error);
+                }
+            });
+        }
+        
+        // Hàm xóa bình luận
+        function deleteComment(commentId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) return;
+            
+            $.ajax({
+                url: `/api/Comment/${commentId}`,
+                type: 'DELETE',
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Tìm bài viết của bình luận này
+                        const post = $(`#comment-${commentId}`).closest('.post-card');
+                        const postId = post.attr('id').replace('post-', '');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error deleting comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error deleting comment:', error);
+                }
+            });
+        }
+    </script>
+} 

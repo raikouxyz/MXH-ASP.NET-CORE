@@ -217,10 +217,11 @@ namespace MXH_ASP.NET_CORE.Controllers
                         _logger.LogInformation("Processing profile picture upload");
 
                         // Xóa ảnh cũ nếu có
-                        if (!string.IsNullOrEmpty(user.ProfilePicture))
+                        if (!string.IsNullOrEmpty(user.ProfilePicture) && 
+                            !user.ProfilePicture.StartsWith("/uploads/avatars/default-avatar"))
                         {
                             var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, 
-                                "uploads", "profile", user.ProfilePicture);
+                                "uploads", "avatars", Path.GetFileName(user.ProfilePicture));
                             if (System.IO.File.Exists(oldImagePath))
                             {
                                 System.IO.File.Delete(oldImagePath);
@@ -230,7 +231,7 @@ namespace MXH_ASP.NET_CORE.Controllers
 
                         // Lưu ảnh mới
                         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(profilePicture.FileName)}";
-                        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "profile", fileName);
+                        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars", fileName);
 
                         // Tạo thư mục nếu chưa tồn tại
                         Directory.CreateDirectory(Path.GetDirectoryName(filePath));
@@ -240,7 +241,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                             await profilePicture.CopyToAsync(stream);
                         }
 
-                        user.ProfilePicture = fileName;
+                        user.ProfilePicture = $"/uploads/avatars/{fileName}";
                         _logger.LogInformation($"Saved new profile picture: {fileName}");
                     }
                     catch (Exception ex)

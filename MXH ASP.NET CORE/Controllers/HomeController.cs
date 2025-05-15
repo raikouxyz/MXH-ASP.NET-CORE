@@ -1,21 +1,37 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
+using MXH_ASP.NET_CORE.ViewModels;
+using System.Diagnostics;
+using System.Security.Claims;
 
 namespace MXH_ASP.NET_CORE.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
         {
             _logger = logger;
+            _context = context;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            // Nếu người dùng đã đăng nhập, hiển thị bài viết, nếu không hiển thị trang welcome
+            if (User.Identity.IsAuthenticated)
+            {
+                // Khởi tạo view model trống để sử dụng trong form đăng bài viết
+                var createPostViewModel = new CreatePostViewModel();
+                return View("Feed", createPostViewModel);
+            }
+            else
+            {
+                return View("Welcome");
+            }
         }
 
         public IActionResult Privacy()
