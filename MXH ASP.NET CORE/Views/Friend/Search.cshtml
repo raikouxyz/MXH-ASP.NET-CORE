@@ -1,0 +1,124 @@
+@model List<MXH_ASP.NET_CORE.Controllers.SearchResultViewModel>
+
+@{
+    ViewData["Title"] = "Tìm kiếm người dùng";
+    var searchQuery = ViewData["SearchQuery"] as string;
+}
+
+<div class="container py-4">
+    <!-- Thanh tìm kiếm -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <form asp-controller="Friend" asp-action="Search" method="get" class="mb-0">
+                <div class="input-group">
+                    <input type="text" name="query" class="form-control" placeholder="Tìm kiếm người dùng..." value="@searchQuery" required>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i> Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Kết quả tìm kiếm -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Kết quả tìm kiếm cho: "@searchQuery"</h5>
+            <a asp-controller="Friend" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Quay lại
+            </a>
+        </div>
+        <div class="card-body">
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle me-2"></i>Không tìm thấy người dùng nào phù hợp với từ khóa "<strong>@searchQuery</strong>".
+                </div>
+            }
+            else
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var result in Model)
+                    {
+                        <div class="col">
+                            <div class="card shadow-sm h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <img src="@(string.IsNullOrEmpty(result.ProfilePicture) ? "/uploads/avatars/default-avatar.svg" : result.ProfilePicture)" 
+                                             class="rounded-circle me-3" style="width: 64px; height: 64px; object-fit: cover;" alt="Avatar">
+                                        <div>
+                                            <h5 class="card-title mb-0">@result.FullName</h5>
+                                            <p class="text-muted mb-0">@@@result.Username</p>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3">
+                                        @if (result.FriendshipStatus == null)
+                                        {
+                                            <form asp-controller="Friend" asp-action="SendRequest" method="post" class="d-inline w-100">
+                                                <input type="hidden" name="userId" value="@result.UserId" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-primary w-100">
+                                                    <i class="fas fa-user-plus me-1"></i>Kết bạn
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (result.FriendshipStatus == MXH_ASP.NET_CORE.Models.FriendshipStatus.Accepted)
+                                        {
+                                            <a href="javascript:void(0)" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                                <i class="fas fa-comment-dots me-1"></i>Nhắn tin
+                                            </a>
+                                            <form asp-controller="Friend" asp-action="Unfriend" method="post" class="d-inline flex-grow-1">
+                                                <input type="hidden" name="userId" value="@result.UserId" />
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100"
+                                                        onclick="return confirm('Bạn có chắc chắn muốn hủy kết bạn với @result.FullName không?')">
+                                                    <i class="fas fa-user-minus me-1"></i>Hủy kết bạn
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (result.FriendshipStatus == MXH_ASP.NET_CORE.Models.FriendshipStatus.Pending)
+                                        {
+                                            @if (result.IsRequester)
+                                            {
+                                                <form asp-controller="Friend" asp-action="CancelRequest" method="post" class="d-inline w-100">
+                                                    <input type="hidden" name="friendshipId" value="@result.FriendshipId" />
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary w-100">
+                                                        <i class="fas fa-times me-1"></i>Hủy lời mời
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex gap-2 w-100">
+                                                    <form asp-controller="Friend" asp-action="AcceptRequest" method="post" class="d-inline flex-grow-1">
+                                                        <input type="hidden" name="friendshipId" value="@result.FriendshipId" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-success w-100">
+                                                            <i class="fas fa-check me-1"></i>Chấp nhận
+                                                        </button>
+                                                    </form>
+                                                    <form asp-controller="Friend" asp-action="RejectRequest" method="post" class="d-inline flex-grow-1">
+                                                        <input type="hidden" name="friendshipId" value="@result.FriendshipId" />
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                                            <i class="fas fa-times me-1"></i>Từ chối
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            }
+                                        }
+                                        else if (result.FriendshipStatus == MXH_ASP.NET_CORE.Models.FriendshipStatus.Blocked)
+                                        {
+                                            <span class="text-muted w-100 text-center">Đã chặn người dùng này</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div> 
