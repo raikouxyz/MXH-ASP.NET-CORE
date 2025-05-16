@@ -28,5 +28,7 @@ namespace MXH_ASP.NET_CORE.ViewModels
 
         [Display(Name = "Đăng nhập lần cuối")]
         public DateTime? LastLoginAt { get; set; }
+
+        public bool IsCurrentUser { get; set; }
     }
 } 
