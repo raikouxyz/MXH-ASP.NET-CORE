@@ -4,7 +4,12 @@
     <div class="card-body">
         <form asp-controller="Post" asp-action="Create" method="post">
             <div class="d-flex mb-3">
-                <img src="@(string.IsNullOrEmpty(User.FindFirst("ProfilePicture")?.Value) ? "/uploads/avatars/default-avatar.svg" : User.FindFirst("ProfilePicture")?.Value)" 
+                @{
+                    var imagePath = string.IsNullOrEmpty(ViewBag.CurrentUserAvatar as string) 
+                        ? "/uploads/avatars/default-avatar.svg" 
+                        : (ViewBag.CurrentUserAvatar as string);
+                }
+                <img src="@imagePath" 
                      class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">
                 <div class="form-floating flex-grow-1">
                     <textarea asp-for="Content" class="form-control" placeholder="Bạn đang nghĩ gì?" style="height: 80px; border-radius: 20px;"></textarea>

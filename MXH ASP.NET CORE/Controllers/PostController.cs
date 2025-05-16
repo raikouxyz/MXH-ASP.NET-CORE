@@ -276,5 +276,59 @@ namespace MXH_ASP.NET_CORE.Controllers
                 return StatusCode(500, "Có lỗi xảy ra khi tải bài viết");
             }
         }
+
+        /// <summary>
+        /// API lấy danh sách bài viết của người dùng cụ thể
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetUserPosts(int id)
+        {
+            try
+            {
+                // Lấy ID của người dùng hiện tại (nếu đã đăng nhập)
+                int? currentUserId = null;
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        currentUserId = int.Parse(userId);
+                    }
+                }
+
+                // Lấy danh sách bài viết của người dùng
+                var posts = await _context.Posts
+                    .Include(p => p.User)
+                    .Include(p => p.Comments)
+                    .Include(p => p.Likes)
+                    .Where(p => p.UserId == id)
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => new PostViewModel
+                    {
+                        Id = p.Id,
+                        Content = p.Content,
+                        ImageUrl = p.ImageUrl,
+                        CreatedAt = p.CreatedAt,
+                        UpdatedAt = p.UpdatedAt,
+                        UserId = p.UserId,
+                        Username = p.User.Username,
+                        UserFullName = p.User.FullName,
+                        ProfilePicture = p.User.ProfilePicture,
+                        CommentCount = p.Comments.Count,
+                        LikeCount = p.Likes.Count,
+                        CanEdit = currentUserId.HasValue && p.UserId == currentUserId.Value,
+                        CanDelete = currentUserId.HasValue && p.UserId == currentUserId.Value,
+                        IsLiked = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value)
+                    })
+                    .ToListAsync();
+
+                return Json(posts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error loading posts for user {id}");
+                return StatusCode(500, "Có lỗi xảy ra khi tải bài viết");
+            }
+        }
     }
 } 

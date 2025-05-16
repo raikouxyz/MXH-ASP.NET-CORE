@@ -29,7 +29,7 @@ namespace MXH_ASP.NET_CORE.Controllers
             _logger = logger;
         }
 
-        // Hiển thị trang profile
+        // Hiển thị trang profile của người dùng hiện tại
         [HttpGet]
         [Route("")]
         [Route("Index")]
@@ -77,7 +77,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                     FullName = user.FullName,
                     ProfilePicture = user.ProfilePicture,
                     CreatedAt = user.CreatedAt,
-                    LastLoginAt = user.LastLoginAt
+                    LastLoginAt = user.LastLoginAt,
+                    IsCurrentUser = true
                 };
 
                 return View(viewModel);
@@ -85,6 +86,57 @@ namespace MXH_ASP.NET_CORE.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in Profile/Index");
+                return View("Error");
+            }
+        }
+
+        // Hiển thị trang profile của người dùng khác
+        [HttpGet]
+        [Route("Index/{id}")]
+        public async Task<IActionResult> Index(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Accessing Profile/Index/{id}");
+                
+                if (!User.Identity.IsAuthenticated)
+                {
+                    _logger.LogWarning("User is not authenticated");
+                    return RedirectToAction("Login", "Account");
+                }
+
+                // Tìm user theo ID
+                var user = await _context.Users.FindAsync(id);
+                if (user == null)
+                {
+                    _logger.LogWarning($"User not found with ID: {id}");
+                    TempData["ErrorMessage"] = "Không tìm thấy người dùng này.";
+                    return RedirectToAction("Index", "Home");
+                }
+
+                _logger.LogInformation($"Found user: {user.Username}");
+
+                // Kiểm tra xem có phải profile của người dùng hiện tại không
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var isCurrentUser = currentUserId == id;
+
+                var viewModel = new UserProfileViewModel
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Email = user.Email,
+                    FullName = user.FullName,
+                    ProfilePicture = user.ProfilePicture,
+                    CreatedAt = user.CreatedAt,
+                    LastLoginAt = user.LastLoginAt,
+                    IsCurrentUser = isCurrentUser
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error in Profile/Index/{id}");
                 return View("Error");
             }
         }
@@ -262,34 +314,10 @@ namespace MXH_ASP.NET_CORE.Controllers
                     await _context.SaveChangesAsync();
                     _logger.LogInformation($"Updated user profile: {user.Username}");
 
-                    // Cập nhật lại thông tin xác thực
-                    var claims = new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.Email, user.Email),
-                        new Claim("FullName", user.FullName ?? string.Empty),
-                        new Claim("ProfilePicture", user.ProfilePicture ?? string.Empty)
-                    };
-
-                    var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = true,
-                        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
-                    };
-
-                    // Đăng xuất và đăng nhập lại với thông tin mới
-                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity),
-                        authProperties);
-
                     // Thêm thông báo thành công
                     TempData["SuccessMessage"] = "Cập nhật thông tin thành công!";
-                    
-                    // Chuyển hướng về trang Index
-                    return RedirectToAction("Index");
+                    // Chuyển hướng về trang chủ để reload thông tin mới nhất
+                    return RedirectToAction("Index", "Home");
                 }
                 catch (DbUpdateException ex)
                 {

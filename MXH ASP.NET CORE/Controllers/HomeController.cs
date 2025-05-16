@@ -24,6 +24,24 @@ namespace MXH_ASP.NET_CORE.Controllers
             // Nếu người dùng đã đăng nhập, hiển thị bài viết, nếu không hiển thị trang welcome
             if (User.Identity.IsAuthenticated)
             {
+                // Lấy avatar và tên từ database
+                var userId = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+                string profilePicture = "/uploads/avatars/default-avatar.svg";
+                string userName = "";
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var user = await _context.Users.FindAsync(int.Parse(userId));
+                    if (user != null)
+                    {
+                        if (!string.IsNullOrEmpty(user.ProfilePicture))
+                        {
+                            profilePicture = user.ProfilePicture;
+                        }
+                        userName = user.FullName ?? user.Username;
+                    }
+                }
+                ViewBag.CurrentUserAvatar = profilePicture;
+                ViewBag.CurrentUserName = userName;
                 // Khởi tạo view model trống để sử dụng trong form đăng bài viết
                 var createPostViewModel = new CreatePostViewModel();
                 return View("Feed", createPostViewModel);

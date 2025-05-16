@@ -1,7 +1,7 @@
 ﻿@model MXH_ASP.NET_CORE.ViewModels.UserProfileViewModel
 
 @{
-    ViewData["Title"] = "Thông tin cá nhân";
+    ViewData["Title"] = Model.FullName + " - Trang cá nhân";
 }
 
 @if (TempData["SuccessMessage"] != null)
@@ -14,66 +14,80 @@
 }
 
 <div class="container py-4">
+    <!-- Avatar lớn ở giữa -->
+    <div class="card mb-4 border-0 bg-transparent">
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+            <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) 
+                ? "/uploads/avatars/default-avatar.svg" 
+                : Model.ProfilePicture)" 
+                 class="rounded-circle border border-4 border-primary shadow" 
+                 style="width: 180px; height: 180px; object-fit: cover; background: #fff;" 
+                 alt="Ảnh đại diện" />
+            <h3 class="card-title mt-4 mb-1 fw-bold">@Model.FullName</h3>
+            <p class="text-muted mb-4">@Model.Username</p>
+            @if (Model.IsCurrentUser)
+            {
+                <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm d-flex align-items-center gap-2 mt-2" style="font-size: 1.1rem;">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Chỉnh sửa thông tin</span>
+                </a>
+            }
+        </div>
+    </div>
+
     <div class="row">
+        <!-- Thông tin cá nhân -->
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) 
-                        ? "/uploads/avatars/default-avatar.svg" 
-                        : Model.ProfilePicture)" 
-                         class="rounded-circle mb-3" 
-                         style="width: 150px; height: 150px; object-fit: cover;"
-                         alt="Ảnh đại diện" />
-                    <h4 class="card-title">@Model.FullName</h4>
-                    <p class="text-muted">@Model.Username</p>
-                    <a asp-controller="Profile" asp-action="Edit" class="btn btn-primary">
-                        <i class="fas fa-edit"></i> Chỉnh sửa thông tin
-                    </a>
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Thông tin cá nhân</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-user text-primary me-2"></i>
+                            <strong>@Html.DisplayNameFor(m => m.Username)</strong>
+                        </div>
+                        <p class="mb-0 ms-4">@Model.Username</p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <strong>@Html.DisplayNameFor(m => m.Email)</strong>
+                        </div>
+                        <p class="mb-0 ms-4">@Model.Email</p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-alt text-primary me-2"></i>
+                            <strong>@Html.DisplayNameFor(m => m.CreatedAt)</strong>
+                        </div>
+                        <p class="mb-0 ms-4">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            <strong>@Html.DisplayNameFor(m => m.LastLoginAt)</strong>
+                        </div>
+                        <p class="mb-0 ms-4">@(Model.LastLoginAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")</p>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Bài viết -->
         <div class="col-md-8">
             <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Bài viết</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="card-title mb-4">Thông tin chi tiết</h5>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong>@Html.DisplayNameFor(m => m.Username)</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            @Model.Username
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong>@Html.DisplayNameFor(m => m.Email)</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            @Model.Email
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong>@Html.DisplayNameFor(m => m.FullName)</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            @Model.FullName
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong>@Html.DisplayNameFor(m => m.CreatedAt)</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-sm-4">
-                            <strong>@Html.DisplayNameFor(m => m.LastLoginAt)</strong>
-                        </div>
-                        <div class="col-sm-8">
-                            @(Model.LastLoginAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa đăng nhập")
+                    <div id="user-posts-container">
+                        <div class="text-center py-5" id="loading-spinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mt-2">Đang tải bài viết...</p>
                         </div>
                     </div>
                 </div>
@@ -89,6 +103,94 @@
             setTimeout(function() {
                 $('.alert').alert('close');
             }, 5000);
+
+            // Tải bài viết của người dùng
+            loadUserPosts();
         });
+
+        function loadUserPosts() {
+            $.ajax({
+                url: '/Post/GetUserPosts/@Model.Id',
+                type: 'GET',
+                success: function(data) {
+                    $('#loading-spinner').hide();
+                    
+                    if (data.length === 0) {
+                        $('#user-posts-container').html('<p class="text-center text-muted py-4">Chưa có bài viết nào.</p>');
+                        return;
+                    }
+
+                    var postsHtml = '';
+                    data.forEach(function(post) {
+                        postsHtml += renderPost(post);
+                    });
+                    
+                    $('#user-posts-container').html(postsHtml);
+                },
+                error: function(error) {
+                    console.error('Error loading user posts:', error);
+                    $('#user-posts-container').html('<p class="text-center text-danger py-4">Không thể tải bài viết. Vui lòng thử lại sau.</p>');
+                }
+            });
+        }
+
+        function renderPost(post) {
+            var dateCreated = new Date(post.createdAt).toLocaleString('vi-VN');
+            var dateTitle = post.updatedAt ? "Đã chỉnh sửa vào " + new Date(post.updatedAt).toLocaleString('vi-VN') : "";
+            var dateDisplay = post.updatedAt ? dateCreated + " (đã chỉnh sửa)" : dateCreated;
+            
+            var postHtml = '<div class="card shadow-sm mb-4">';
+            
+            // Phần đầu bài viết
+            postHtml += '<div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">';
+            postHtml += '<div class="d-flex align-items-center">';
+            postHtml += '<img src="' + (post.profilePicture || '/uploads/avatars/default-avatar.svg') + '" class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">';
+            postHtml += '<div>';
+            postHtml += '<h6 class="mb-0 fw-bold">' + post.userFullName + '</h6>';
+            postHtml += '<small class="text-muted">' + dateDisplay + '</small>';
+            postHtml += '</div>';
+            postHtml += '</div>';
+            
+            // Nút chỉnh sửa/xóa nếu là bài viết của người dùng hiện tại
+            if (post.canEdit || post.canDelete) {
+                postHtml += '<div class="dropdown">';
+                postHtml += '<button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">';
+                postHtml += '<i class="fas fa-ellipsis-v"></i>';
+                postHtml += '</button>';
+                postHtml += '<ul class="dropdown-menu dropdown-menu-end">';
+                if (post.canEdit) {
+                    postHtml += '<li><a class="dropdown-item" href="/Post/Edit/' + post.id + '"><i class="fas fa-pencil-alt me-2"></i>Chỉnh sửa</a></li>';
+                }
+                if (post.canDelete) {
+                    postHtml += '<li><form action="/Post/Delete" method="post" class="d-inline"><input type="hidden" name="id" value="' + post.id + '" /><input type="hidden" name="__RequestVerificationToken" value="' + $('input[name="__RequestVerificationToken"]').val() + '" /><button type="submit" class="dropdown-item text-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa bài viết này?\')"><i class="fas fa-trash-alt me-2"></i>Xóa</button></form></li>';
+                }
+                postHtml += '</ul>';
+                postHtml += '</div>';
+            }
+            
+            postHtml += '</div>';
+            
+            // Nội dung bài viết
+            postHtml += '<div class="card-body">';
+            postHtml += '<p class="card-text">' + post.content + '</p>';
+            if (post.imageUrl) {
+                postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+            }
+            
+            // Thống kê
+            postHtml += '<div class="d-flex justify-content-between text-muted small mb-2">';
+            if (post.likeCount > 0) {
+                postHtml += '<div><i class="fas fa-thumbs-up text-primary"></i> ' + post.likeCount + '</div>';
+            }
+            if (post.commentCount > 0) {
+                postHtml += '<div>' + post.commentCount + ' bình luận</div>';
+            }
+            postHtml += '</div>';
+            
+            postHtml += '</div>';
+            postHtml += '</div>';
+            
+            return postHtml;
+        }
     </script>
 } 
