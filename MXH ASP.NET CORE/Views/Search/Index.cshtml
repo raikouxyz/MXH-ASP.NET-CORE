@@ -1,0 +1,184 @@
+@{
+    ViewData["Title"] = "Tìm kiếm - VibeNet";
+    var query = Context.Request.Query["query"].ToString();
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Kết quả tìm kiếm -->
+            <div id="searchResults">
+                <!-- Tab chuyển đổi giữa người dùng và bài viết -->
+                <ul class="nav nav-tabs mb-4" id="searchTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" 
+                                data-bs-target="#users" type="button" role="tab">
+                            <i class="fas fa-users me-2"></i>Người dùng
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="posts-tab" data-bs-toggle="tab" 
+                                data-bs-target="#posts" type="button" role="tab">
+                            <i class="fas fa-newspaper me-2"></i>Bài viết
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Nội dung tab -->
+                <div class="tab-content" id="searchTabContent">
+                    <!-- Tab người dùng -->
+                    <div class="tab-pane fade show active" id="users" role="tabpanel">
+                        <div id="usersResults" class="list-group">
+                            <!-- Kết quả người dùng sẽ được thêm vào đây -->
+                        </div>
+                    </div>
+
+                    <!-- Tab bài viết -->
+                    <div class="tab-pane fade" id="posts" role="tabpanel">
+                        <div id="postsResults">
+                            <!-- Kết quả bài viết sẽ được thêm vào đây -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const usersResults = $('#usersResults');
+            const postsResults = $('#postsResults');
+
+            // Hàm tìm kiếm
+            function performSearch() {
+                const query = '@query';
+                if (!query) {
+                    usersResults.html('<div class="text-center text-muted py-4">Vui lòng nhập từ khóa tìm kiếm</div>');
+                    postsResults.html('<div class="text-center text-muted py-4">Vui lòng nhập từ khóa tìm kiếm</div>');
+                    return;
+                }
+
+                // Hiển thị loading
+                usersResults.html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+                postsResults.html('<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>');
+
+                // Tìm kiếm người dùng
+                $.get('/Search/SearchUsers', { query: query })
+                    .done(function(response) {
+                        if (response.success) {
+                            if (response.users.length === 0) {
+                                usersResults.html('<div class="text-center text-muted py-4">Không tìm thấy người dùng nào</div>');
+                            } else {
+                                let html = '';
+                                response.users.forEach(function(user) {
+                                    html += '<a href="/Profile/Index/' + user.id + '" class="list-group-item list-group-item-action">' +
+                                           '<div class="d-flex align-items-center">' +
+                                           '<img src="' + (user.profilePicture || '/uploads/avatars/default-avatar.svg') + '" ' +
+                                           'class="rounded-circle me-3" ' +
+                                           'style="width: 50px; height: 50px; object-fit: cover;">' +
+                                           '<div>' +
+                                           '<h6 class="mb-0">' + user.fullName + '</h6>' +
+                                           '<small class="text-muted">' + user.username + '</small>' +
+                                           '</div>' +
+                                           '</div>' +
+                                           '</a>';
+                                });
+                                usersResults.html(html);
+                            }
+                        } else {
+                            usersResults.html(`<div class="text-center text-danger py-4">${response.message}</div>`);
+                        }
+                    })
+                    .fail(function() {
+                        usersResults.html('<div class="text-center text-danger py-4">Có lỗi xảy ra khi tìm kiếm</div>');
+                    });
+
+                // Tìm kiếm bài viết
+                $.get('/Search/SearchPosts', { query: query })
+                    .done(function(response) {
+                        if (response.success) {
+                            if (response.posts.length === 0) {
+                                postsResults.html('<div class="text-center text-muted py-4">Không tìm thấy bài viết nào</div>');
+                            } else {
+                                let html = '';
+                                response.posts.forEach(function(post) {
+                                    html += renderPost(post);
+                                });
+                                postsResults.html(html);
+                            }
+                        } else {
+                            postsResults.html(`<div class="text-center text-danger py-4">${response.message}</div>`);
+                        }
+                    })
+                    .fail(function() {
+                        postsResults.html('<div class="text-center text-danger py-4">Có lỗi xảy ra khi tìm kiếm</div>');
+                    });
+            }
+
+            // Tự động tìm kiếm khi trang được tải
+            performSearch();
+
+            // Hàm render bài viết (tái sử dụng từ trang Feed)
+            function renderPost(post) {
+                var dateCreated = new Date(post.createdAt).toLocaleString('vi-VN');
+                var dateTitle = post.updatedAt ? "Đã chỉnh sửa vào " + new Date(post.updatedAt).toLocaleString('vi-VN') : "";
+                var dateDisplay = post.updatedAt ? dateCreated + " (đã chỉnh sửa)" : dateCreated;
+                
+                var postHtml = '<div class="card shadow-sm mb-4">';
+                
+                // Phần đầu bài viết
+                postHtml += '<div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">';
+                postHtml += '<div class="d-flex align-items-center">';
+                postHtml += '<img src="' + (post.userProfilePicture || '/uploads/avatars/default-avatar.svg') + '" class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">';
+                postHtml += '<div>';
+                postHtml += '<h6 class="mb-0 fw-bold">' + post.userFullName + '</h6>';
+                postHtml += '<small class="text-muted">' + dateDisplay + '</small>';
+                postHtml += '</div>';
+                postHtml += '</div>';
+                
+                // Nút chỉnh sửa/xóa nếu là bài viết của người dùng hiện tại
+                if (post.canEdit || post.canDelete) {
+                    postHtml += '<div class="dropdown">';
+                    postHtml += '<button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">';
+                    postHtml += '<i class="fas fa-ellipsis-v"></i>';
+                    postHtml += '</button>';
+                    postHtml += '<ul class="dropdown-menu dropdown-menu-end">';
+                    if (post.canEdit) {
+                        postHtml += '<li><a class="dropdown-item" href="/Post/Edit/' + post.id + '"><i class="fas fa-pencil-alt me-2"></i>Chỉnh sửa</a></li>';
+                    }
+                    if (post.canDelete) {
+                        postHtml += '<li><form action="/Post/Delete" method="post" class="d-inline"><input type="hidden" name="id" value="' + post.id + '" /><input type="hidden" name="__RequestVerificationToken" value="' + $('input[name="__RequestVerificationToken"]').val() + '" /><button type="submit" class="dropdown-item text-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa bài viết này?\')"><i class="fas fa-trash-alt me-2"></i>Xóa</button></form></li>';
+                    }
+                    postHtml += '</ul>';
+                    postHtml += '</div>';
+                }
+                
+                postHtml += '</div>';
+                
+                // Nội dung bài viết
+                postHtml += '<div class="card-body">';
+                postHtml += '<p class="card-text">' + post.content + '</p>';
+                if (post.imageUrl) {
+                    postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+                }
+                
+                // Thống kê
+                postHtml += '<div class="d-flex justify-content-between text-muted small mb-2">';
+                if (post.likeCount > 0) {
+                    postHtml += '<div><i class="fas fa-thumbs-up text-primary"></i> ' + post.likeCount + '</div>';
+                }
+                if (post.commentCount > 0) {
+                    postHtml += '<div>' + post.commentCount + ' bình luận</div>';
+                }
+                postHtml += '</div>';
+                
+                postHtml += '</div>';
+                postHtml += '</div>';
+                
+                return postHtml;
+            }
+        });
+    </script>
+} 
