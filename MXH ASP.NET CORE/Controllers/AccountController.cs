@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
@@ -15,11 +16,13 @@ namespace MXH_ASP.NET_CORE.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ISmsSender _smsSender;
+        private readonly ILogger<AccountController> _logger;
 
-        public AccountController(ApplicationDbContext context, ISmsSender smsSender)
+        public AccountController(ApplicationDbContext context, ISmsSender smsSender, ILogger<AccountController> logger)
         {
             _context = context;
             _smsSender = smsSender;
+            _logger = logger;
         }
 
         // GET: /Account/Register
@@ -305,6 +308,67 @@ namespace MXH_ASP.NET_CORE.Controllers
             }
 
             return View(model);
+        }
+
+        // GET: /Account/ChangePassword
+        /// <summary>
+        /// Hiển thị form đổi mật khẩu
+        /// </summary>
+        [Authorize]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        // POST: /Account/ChangePassword
+        /// <summary>
+        /// Xử lý yêu cầu đổi mật khẩu
+        /// </summary>
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            try
+            {
+                // Lấy thông tin người dùng hiện tại
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var user = await _context.Users.FindAsync(userId);
+
+                if (user == null)
+                {
+                    // Đăng xuất nếu không tìm thấy user
+                    await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                    return RedirectToAction("Login");
+                }
+
+                // Kiểm tra mật khẩu hiện tại
+                if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Mật khẩu hiện tại không đúng");
+                    return View(model);
+                }
+
+                // Cập nhật mật khẩu mới
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword, BCrypt.Net.BCrypt.GenerateSalt());
+                await _context.SaveChangesAsync();
+
+                // Thông báo thành công
+                TempData["SuccessMessage"] = "Mật khẩu đã được thay đổi thành công";
+                return RedirectToAction("Index", "Profile");
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                _logger.LogError(ex, "Lỗi khi đổi mật khẩu");
+                ModelState.AddModelError(string.Empty, "Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại sau.");
+                return View(model);
+            }
         }
 
         #region Private Methods

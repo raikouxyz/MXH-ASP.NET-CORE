@@ -19,8 +19,16 @@
 
                 <!-- Search Box -->
                 <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Tìm kiếm trên VibeNet" />
+                    <form action="/Search" method="get" class="d-flex" id="searchForm">
+                        <div class="input-group">
+                            <input type="text" name="query" id="searchInput" class="form-control" 
+                                   placeholder="Tìm kiếm trên VibeNet" 
+                                   autocomplete="off" />
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
                 </div>
 
                 <!-- Navigation Icons -->
@@ -66,8 +74,8 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="#">
-                                        <i class="fas fa-cog"></i>Cài đặt
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                                        <i class="fas fa-key"></i>Đổi mật khẩu
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -100,6 +108,18 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        $(document).ready(function() {
+            // Xử lý sự kiện submit form tìm kiếm
+            $('#searchForm').on('submit', function(e) {
+                e.preventDefault();
+                const query = $('#searchInput').val().trim();
+                if (query) {
+                    window.location.href = '/Search?query=' + encodeURIComponent(query);
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
