@@ -31,6 +31,15 @@
                         </a>
                     </li>
                     <li class="nav-item mb-2">
+                        <a asp-controller="Message" asp-action="Index" class="nav-link ps-0 text-dark d-flex align-items-center justify-content-between">
+                            <div>
+                                <i class="fas fa-comments fa-lg me-3 text-secondary"></i>
+                                Nhắn tin
+                            </div>
+                            <span class="badge bg-danger rounded-pill d-none" id="new-messages-badge"></span>
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
                         <a href="#" class="nav-link ps-0 text-dark">
                             <i class="fas fa-bookmark fa-lg me-3 text-warning"></i>
                             Đã lưu
@@ -97,35 +106,24 @@
         </div>
     </div>
 
-    <!-- Cột phải - Đề xuất bạn bè và quảng cáo -->
+    <!-- Cột phải - Danh sách bạn bè -->
     <div class="col-lg-3 d-none d-lg-block">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Đề xuất kết bạn</h6>
-                <a asp-controller="Friend" asp-action="Index" asp-fragment="suggestions" class="text-decoration-none small">
+                <h6 class="mb-0">Danh sách bạn bè</h6>
+                <a asp-controller="Friend" asp-action="Index" class="text-decoration-none small">
                     Xem tất cả
                 </a>
             </div>
             <div class="card-body p-0">
-                <div id="friend-suggestions-container">
+                <div id="friends-list-container">
                     <div class="text-center py-3">
                         <div class="spinner-border spinner-border-sm text-primary" role="status">
                             <span class="visually-hidden">Đang tải...</span>
                         </div>
-                        <p class="mb-0 small">Đang tải gợi ý kết bạn...</p>
+                        <p class="mb-0 small">Đang tải danh sách bạn bè...</p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h6 class="mb-0">Hoạt động gần đây</h6>
-            </div>
-            <div class="card-body">
-                <p class="text-muted small text-center py-3">
-                    Chưa có hoạt động nào gần đây.
-                </p>
             </div>
         </div>
     </div>
@@ -142,12 +140,16 @@
         // Tự động tải bài viết khi trang được tải
         $(document).ready(function() {
             loadPosts();
-            loadFriendSuggestions();
+            loadFriendsList();
+            checkNewMessagesCount(); // Kiểm tra lần đầu khi tải trang
             
             // Tự động đóng thông báo sau 5 giây
             setTimeout(function() {
                 $('.alert').alert('close');
             }, 5000);
+
+            // Kiểm tra tin nhắn mới mỗi 10 giây
+            setInterval(checkNewMessagesCount, 10000); 
         });
         
         // Hàm tải bài viết
@@ -597,56 +599,90 @@
             });
         }
 
-        // Hàm tải gợi ý kết bạn
-        function loadFriendSuggestions() {
+        // Hàm tải danh sách bạn bè
+        function loadFriendsList() {
             $.ajax({
-                url: '/Friend/GetSuggestions',
+                url: '/Friend/GetFriends',
                 type: 'GET',
                 success: function(data) {
                     if (data.success) {
-                        var container = $('#friend-suggestions-container');
+                        var container = $('#friends-list-container');
                         container.empty();
                         
-                        if (data.suggestions.length === 0) {
-                            container.html('<p class="text-muted small text-center py-3">Chưa có đề xuất kết bạn nào.</p>');
+                        if (data.friends.length === 0) {
+                            container.html('<p class="text-muted small text-center py-3">Bạn chưa có bạn bè nào.</p>');
                             return;
                         }
                         
-                        // Hiển thị tối đa 3 gợi ý kết bạn
-                        var suggestions = data.suggestions.slice(0, 3);
+                        // Hiển thị tối đa 5 bạn bè
+                        var friends = data.friends.slice(0, 5);
                         
-                        suggestions.forEach(function(user) {
-                            var imgSrc = user.profilePicture || '/uploads/avatars/default-avatar.svg';
-                            var token = $('input[name="__RequestVerificationToken"]').val();
-                            
-                            var suggestionHtml = '<div class="d-flex align-items-center p-3 border-bottom">';
-                            suggestionHtml += '<img src="' + imgSrc + '" class="rounded-circle me-2" alt="' + user.fullName + '" style="width: 40px; height: 40px; object-fit: cover;">';
-                            suggestionHtml += '<div class="flex-grow-1 min-width-0">';
-                            suggestionHtml += '<h6 class="mb-0 text-truncate">' + user.fullName + '</h6>';
-                            
-                            // Sử dụng unicode escape sequence thay cho ký tự at-sign
-                            suggestionHtml += '<p class="mb-0 small text-muted text-truncate">' + '\u0040' + user.username + '</p>';
-                            
-                            suggestionHtml += '</div>';
-                            suggestionHtml += '<form action="/Friend/SendRequest" method="post" class="ms-2">';
-                            suggestionHtml += '<input type="hidden" name="userId" value="' + user.userId + '" />';
-                            suggestionHtml += '<input type="hidden" name="__RequestVerificationToken" value="' + token + '" />';
-                            suggestionHtml += '<button type="submit" class="btn btn-sm btn-primary">';
-                            suggestionHtml += '<i class="fas fa-user-plus"></i>';
-                            suggestionHtml += '</button>';
-                            suggestionHtml += '</form>';
-                            suggestionHtml += '</div>';
-                            
-                            container.append(suggestionHtml);
+                        friends.forEach(function(friend) {
+                            // Render từng mục bạn bè sử dụng hàm riêng
+                            renderFriendItem(friend, container);
                         });
+
                     } else {
-                        $('#friend-suggestions-container').html('<p class="text-muted small text-center py-3">Không thể tải gợi ý kết bạn.</p>');
+                        $('#friends-list-container').html('<p class="text-muted small text-center py-3">Không thể tải danh sách bạn bè.</p>');
                     }
                 },
                 error: function() {
-                    $('#friend-suggestions-container').html('<p class="text-muted small text-center py-3">Không thể tải gợi ý kết bạn.</p>');
+                    $('#friends-list-container').html('<p class="text-muted small text-center py-3">Không thể tải danh sách bạn bè.</p>');
                 }
             });
+        }
+
+        // Hàm render từng mục bạn bè và gán sự kiện nhắn tin
+        function renderFriendItem(friend, containerElement) {
+            // Bỏ qua nếu userId không hợp lệ
+            if (!friend.userId || friend.userId <= 0) {
+                console.warn('Skipping friend with invalid userId:', friend);
+                return; // Bỏ qua mục này
+            }
+
+            var imgSrc = friend.profilePicture || '/uploads/avatars/default-avatar.svg';
+            
+            var friendHtml = '<div class="d-flex align-items-center p-3 border-bottom">';
+            friendHtml += '<img src="' + imgSrc + '" class="rounded-circle me-2" alt="' + friend.fullName + '" style="width: 40px; height: 40px; object-fit: cover;">';
+            friendHtml += '<div class="flex-grow-1 min-width-0">';
+            // Bọc tên và username bằng thẻ a link đến trang cá nhân
+            friendHtml += '<a href="/Profile/Index/' + friend.userId + '" class="text-dark text-decoration-none">';
+            friendHtml += '<h6 class="mb-0 fw-bold text-truncate">' + friend.fullName + '</h6>';
+            friendHtml += '<p class="mb-0 small text-muted text-truncate">' + '\u0040' + friend.username + '</p>';
+            friendHtml += '</a>';
+            friendHtml += '</div>';
+            
+            friendHtml += '</div>'; // Đóng div flex
+
+            // Tạo JQuery object từ HTML string
+            var friendElement = $(friendHtml);
+            // Không cần append button nữa
+            // friendElement.append(messageButton);
+
+            containerElement.append(friendElement);
+        }
+
+        // Hàm kiểm tra tin nhắn mới và hiển thị thông báo tên người gửi
+        function checkNewMessagesCount() {
+            $.get('/Message/CheckNewMessagesCount')
+                .done(function(response) {
+                    const badge = $('#new-messages-badge');
+                    if (response.success && response.count > 0) {
+                        badge.text(response.count).removeClass('d-none');
+                        
+                        // Tạo tooltip hiển thị tên người gửi
+                        const senderNames = response.senders.map(s => s.SenderName).join(', ');
+                        const tooltipTitle = `Tin nhắn mới từ: ${senderNames}`;
+
+                        // Cập nhật tooltip cho thẻ a 'Nhắn tin'
+                        $('.nav-link.ps-0.text-dark.d-flex.align-items-center.justify-content-between').attr('title', tooltipTitle);
+                        
+                    } else {
+                        badge.addClass('d-none').text('');
+                        // Xóa tooltip khi không có tin nhắn mới
+                        $('.nav-link.ps-0.text-dark.d-flex.align-items-center.justify-content-between').removeAttr('title');
+                    }
+                });
         }
     </script>
 }
