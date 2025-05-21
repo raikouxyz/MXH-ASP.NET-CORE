@@ -532,6 +532,43 @@ namespace MXH_ASP.NET_CORE.Controllers
                 return Json(new { success = false, message = "Đã xảy ra lỗi khi tải gợi ý kết bạn." });
             }
         }
+
+        // GET: /Friend/GetFriends
+        /// <summary>
+        /// Lấy danh sách bạn bè của người dùng hiện tại
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetFriends()
+        {
+            try
+            {
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+                var friends = await _context.Friendships
+                    .Where(f => f.Status == FriendshipStatus.Accepted &&
+                        (f.RequesterId == currentUserId || f.AddresseeId == currentUserId))
+                    .Select(f => new
+                    {
+                        UserId = f.RequesterId == currentUserId ? f.AddresseeId : f.RequesterId,
+                        User = f.RequesterId == currentUserId ? f.Addressee : f.Requester
+                    })
+                    .Select(f => new
+                    {
+                        f.UserId,
+                        f.User.Username,
+                        f.User.FullName,
+                        f.User.ProfilePicture
+                    })
+                    .ToListAsync();
+
+                return Json(new { success = true, friends });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy danh sách bạn bè");
+                return Json(new { success = false, message = "Có lỗi xảy ra khi lấy danh sách bạn bè" });
+            }
+        }
     }
 
     /// <summary>

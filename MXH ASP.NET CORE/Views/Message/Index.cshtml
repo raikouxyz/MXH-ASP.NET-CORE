@@ -1,0 +1,45 @@
+@model IEnumerable<MXH_ASP.NET_CORE.Controllers.FriendWithUnreadCountViewModel>
+
+@{
+    ViewData["Title"] = "Danh sách bạn bè để nhắn tin";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Chọn bạn bè để nhắn tin</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model == null || !Model.Any())
+                    {
+                        <p class="text-muted text-center py-3">Bạn chưa có bạn bè nào.</p>
+                    }
+                    else
+                    {
+                        <ul class="list-group list-group-flush">
+                            @foreach (var friend in Model)
+                            {
+                                <li class="list-group-item d-flex align-items-center">
+                                    <img src="@(friend.ProfilePicture ?? "/uploads/avatars/default-avatar.svg")" alt="Avatar" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">@friend.FullName</h6>
+                                        <small class="text-muted">@@@friend.Username</small>
+                                    </div>
+                                    <a href="@Url.Action("Chat", "Message", new { userId = friend.UserId })" class="btn btn-primary btn-sm d-flex align-items-center">
+                                        <i class="fas fa-comment me-1"></i> Nhắn tin
+                                        @if (friend.UnreadCount > 0)
+                                        {
+                                            <span class="badge bg-danger rounded-pill ms-1">@friend.UnreadCount</span>
+                                        }
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
