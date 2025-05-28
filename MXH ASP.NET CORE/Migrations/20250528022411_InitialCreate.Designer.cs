@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace MXH_ASP.NET_CORE.Data.Migrations
+namespace MXH_ASP.NET_CORE.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250518044356_AddMessagesTable")]
-    partial class AddMessagesTable
+    [Migration("20250528022411_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

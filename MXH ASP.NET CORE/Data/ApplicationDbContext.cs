@@ -22,8 +22,6 @@ namespace MXH_ASP.NET_CORE.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-
             // Cấu hình các ràng buộc và mối quan hệ
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
