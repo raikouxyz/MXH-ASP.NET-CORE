@@ -49,6 +49,30 @@ namespace MXH_ASP.NET_CORE.Controllers
                         CreatedAt = DateTime.UtcNow
                     };
 
+                    // Xử lý upload ảnh nếu có
+                    if (model.ImageFile != null && model.ImageFile.Length > 0)
+                    {
+                        // Tạo thư mục nếu chưa tồn tại
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "posts");
+                        if (!Directory.Exists(uploadsFolder))
+                        {
+                            Directory.CreateDirectory(uploadsFolder);
+                        }
+
+                        // Tạo tên file duy nhất
+                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ImageFile.FileName;
+                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        // Lưu file
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await model.ImageFile.CopyToAsync(fileStream);
+                        }
+
+                        // Lưu đường dẫn tương đối vào database
+                        post.ImageUrl = "/uploads/posts/" + uniqueFileName;
+                    }
+
                     _context.Posts.Add(post);
                     await _context.SaveChangesAsync();
 

@@ -38,5 +38,12 @@ namespace MXH_ASP.NET_CORE.Models
         public virtual ICollection<Post> Posts { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<Friendship> Friendships { get; set; }
+
+        public User()
+        {
+            Posts = new List<Post>();
+            Comments = new List<Comment>();
+            Friendships = new List<Friendship>();
+        }
     }
 } 

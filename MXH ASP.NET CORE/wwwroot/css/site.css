@@ -16,7 +16,7 @@ body {
 
 /* 2. Header Styles */
 .navbar {
-    background-color: #ffffff !important;
+    background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0,0,0,.1);
     padding: 0.5rem 1rem;
     position: fixed;
@@ -28,31 +28,93 @@ body {
 
 .navbar-brand {
     color: #1877f2 !important;
-    font-size: 1.5rem;
     font-weight: bold;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand:hover {
+    color: #166fe5 !important;
+    transform: scale(1.05);
+}
+
+.navbar-brand i {
+    margin-right: 8px;
+    color: #1877f2;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 /* 3. Search Box */
 .search-box {
-    background-color: #f0f2f5;
-    border-radius: 20px;
-    padding: 0.5rem 1rem;
-    width: 240px;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.search-box input {
-    background: transparent;
-    border: none;
-    outline: none;
+    flex: 0 0 auto;
+    max-width: 500px;
     width: 100%;
-    color: #65676b;
 }
 
-.search-box i {
+.search-wrapper {
+    position: relative;
+}
+
+.search-wrapper .input-group {
+    background: #f0f2f5;
+    border-radius: 50px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.search-wrapper .input-group:hover {
+    background: #e4e6eb;
+}
+
+.search-wrapper .input-group:focus-within {
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-color: #1877f2;
+}
+
+.search-wrapper .form-control {
+    border: none;
+    background: transparent;
+    padding: 10px 16px;
+    font-size: 15px;
+    color: #1c1e21;
+}
+
+.search-wrapper .form-control:focus {
+    box-shadow: none;
+}
+
+.search-wrapper .form-control::placeholder {
     color: #65676b;
+    font-weight: 400;
+}
+
+.search-wrapper .search-btn {
+    background-color: #1877f2;
+    border: none;
+    padding: 8px 16px;
+    color: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-radius: 0 50px 50px 0;
+}
+
+.search-wrapper .search-btn:hover {
+    background-color: #166fe5;
+    transform: translateY(-1px);
+}
+
+.search-wrapper .search-btn:active {
+    transform: translateY(0);
+}
+
+.search-wrapper .search-btn i {
+    font-size: 14px;
 }
 
 /* 4. Navigation Icons */
@@ -82,31 +144,69 @@ body {
     gap: 1rem;
 }
 
+.user-menu .btn {
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.user-menu .btn-primary {
+    background-color: #1877f2;
+    border-color: #1877f2;
+}
+
+.user-menu .btn-primary:hover {
+    background-color: #166fe5;
+    border-color: #166fe5;
+    transform: translateY(-1px);
+}
+
+.user-menu .btn-outline-primary {
+    color: #1877f2;
+    border-color: #1877f2;
+    background: transparent;
+}
+
+.user-menu .btn-outline-primary:hover {
+    background-color: #e7f3ff;
+    color: #1877f2;
+    border-color: #1877f2;
+}
+
 .user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
+    border: 2px solid #e4e6eb;
+    transition: all 0.3s ease;
+}
+
+.dropdown-toggle:hover .user-avatar {
+    border-color: #1877f2;
 }
 
 .dropdown-menu {
     border: none;
     box-shadow: 0 2px 4px rgba(0,0,0,.1);
     border-radius: 8px;
+    padding: 8px 0;
 }
 
 .dropdown-item {
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
     color: #1c1e21;
+    transition: all 0.2s ease;
 }
 
 .dropdown-item:hover {
-    background-color: #f0f2f5;
+    background-color: #f2f2f2;
+    color: #1c1e21;
+    transform: none;
 }
 
 .dropdown-item i {
+    margin-right: 8px;
     width: 20px;
     color: #65676b;
+    text-align: center;
 }
 
 /* 6. Buttons */
@@ -157,7 +257,22 @@ main {
 
 @media (max-width: 768px) {
     .search-box {
-        display: none;
+        max-width: 300px;
+        margin: 10px 0;
+    }
+    
+    .search-wrapper .form-control {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .search-wrapper .search-btn {
+        padding: 6px 12px;
+    }
+    
+    .user-menu .btn {
+        padding: 6px 12px;
+        font-size: 14px;
     }
     
     .nav-icons {
@@ -167,4 +282,26 @@ main {
     .navbar-brand {
         font-size: 1.25rem;
     }
+}
+
+/* Animation cho trang */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.navbar {
+    animation: fadeInUp 0.8s ease;
+}
+
+/* Hiệu ứng gõ chữ cho placeholder */
+@keyframes typing {
+    0% { width: 0; }
+    100% { width: 100%; }
 }

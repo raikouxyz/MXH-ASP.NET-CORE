@@ -13,57 +13,57 @@
 <input type="hidden" id="current-user-avatar" value="@profilePicture" />
 
 <div class="row mt-4">
-    <!-- Cột trái - Menu nhanh và shortcuts -->
-    <div class="col-lg-3 d-none d-lg-block">
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <ul class="nav flex-column">
-                    <li class="nav-item mb-2">
-                        <a href="#" class="nav-link ps-0 text-dark">
-                            <i class="fas fa-user-circle fa-lg me-3 text-primary"></i>
-                            @userName
+    <!-- Sidebar bên trái -->
+    <div class="col-lg-3 d-none d-lg-block ps-4">
+        <div class="position-sticky" style="top: 2rem;">
+            <!-- Menu chính -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Index", "Home")" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-home me-2"></i> Trang chủ
                         </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a asp-controller="Friend" asp-action="Index" class="nav-link ps-0 text-dark">
-                            <i class="fas fa-users fa-lg me-3 text-info"></i>
-                            Bạn bè
+                        <a href="@Url.Action("Index", "Profile")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user me-2"></i> Trang cá nhân
                         </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a asp-controller="Message" asp-action="Index" class="nav-link ps-0 text-dark d-flex align-items-center justify-content-between">
-                            <div>
-                                <i class="fas fa-comments fa-lg me-3 text-secondary"></i>
-                                Nhắn tin
+                        <a href="@Url.Action("Index", "Friend")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-users me-2"></i> Bạn bè
+                        </a>
+                        <a href="@Url.Action("Index", "Message")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-envelope me-2"></i> Tin nhắn
+                            <span id="new-messages-badge" class="badge bg-danger rounded-pill d-none">0</span>
+                        </a>
+                        <a href="@Url.Action("Index", "Notification")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i> Thông báo
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danh sách bạn bè -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Danh sách bạn bè</h6>
+                    <a asp-controller="Friend" asp-action="Index" class="text-decoration-none small">
+                        Xem tất cả
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div id="friends-list-container">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
                             </div>
-                            <span class="badge bg-danger rounded-pill d-none" id="new-messages-badge"></span>
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a href="#" class="nav-link ps-0 text-dark">
-                            <i class="fas fa-bookmark fa-lg me-3 text-warning"></i>
-                            Đã lưu
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a href="#" class="nav-link ps-0 text-dark">
-                            <i class="fas fa-history fa-lg me-3 text-secondary"></i>
-                            Kỷ niệm
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a asp-controller="Profile" asp-action="Index" class="nav-link ps-0 text-dark">
-                            <i class="fas fa-user-cog fa-lg me-3 text-danger"></i>
-                            Trang cá nhân
-                        </a>
-                    </li>
-                </ul>
+                            <p class="mb-0 small">Đang tải danh sách bạn bè...</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Cột giữa - Danh sách bài viết -->
-    <div class="col-lg-6">
+    <div class="col-12 col-lg-6 px-4">
         <!-- Kiểm tra thông báo thành công -->
         @if (TempData["SuccessMessage"] != null)
         {
@@ -107,21 +107,20 @@
     </div>
 
     <!-- Cột phải - Danh sách bạn bè -->
-    <div class="col-lg-3 d-none d-lg-block">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="mb-0">Danh sách bạn bè</h6>
-                <a asp-controller="Friend" asp-action="Index" class="text-decoration-none small">
-                    Xem tất cả
-                </a>
-            </div>
-            <div class="card-body p-0">
-                <div id="friends-list-container">
-                    <div class="text-center py-3">
-                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                            <span class="visually-hidden">Đang tải...</span>
+    <div class="col-lg-3 d-none d-lg-block pe-4">
+        <div class="position-sticky" style="top: 2rem;">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">Gợi ý kết bạn</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div id="suggested-friends-container">
+                        <div class="text-center py-3">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                <span class="visually-hidden">Đang tải...</span>
+                            </div>
+                            <p class="mb-0 small">Đang tải gợi ý...</p>
                         </div>
-                        <p class="mb-0 small">Đang tải danh sách bạn bè...</p>
                     </div>
                 </div>
             </div>

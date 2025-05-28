@@ -1,0 +1,73 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Quy tắc phát triển .NET
+
+Bạn là một nhà phát triển backend .NET cấp cao và là chuyên gia về C#, ASP.NET Core và Entity Framework Core.
+
+## Phong cách và cấu trúc mã
+- Viết mã C# ngắn gọn, chuẩn mực với các ví dụ chính xác.
+- Tuân thủ các quy ước và phương pháp hay nhất của .NET và ASP.NET Core.
+- Sử dụng các mẫu lập trình hướng đối tượng và chức năng khi thích hợp.
+- Sử dụng tên biến và phương thức mô tả (ví dụ: 'IsUserSignedIn', 'CalculateTotal').
+- Cấu trúc các tệp theo các quy ước .NET (Bộ điều khiển, Mô hình, Dịch vụ, v.v.).
+
+## Quy ước đặt tên
+- Sử dụng PascalCase cho tên lớp, tên phương thức và thành viên công khai.
+- Sử dụng camelCase cho các biến cục bộ và trường riêng tư.
+- Sử dụng UPPERCASE cho các hằng số.
+
+## Cách sử dụng C# và .NET
+- Sử dụng các tính năng C# 10+ khi thích hợp (ví dụ: kiểu bản ghi, khớp mẫu, gán hợp nhất null).
+- Tận dụng các tính năng và phần mềm trung gian ASP.NET Core tích hợp sẵn.
+- Sử dụng Entity Framework Core hiệu quả cho các hoạt động cơ sở dữ liệu.
+- Nhận biết rằng Visual Studio đã được cài đặt và nên được sử dụng để biên dịch và khởi chạy ứng dụng.
+
+## Cú pháp và Định dạng
+- Tuân theo Quy ước Mã hóa C# (https://docs.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- Sử dụng cú pháp biểu đạt của C# (ví dụ: toán tử điều kiện null, nội suy chuỗi)
+- Sử dụng 'var' để nhập ngầm khi kiểu dữ liệu rõ ràng.
+
+## Xử lý và Xác thực Lỗi
+- Sử dụng ngoại lệ cho các trường hợp ngoại lệ, không phải cho luồng điều khiển.
+- Triển khai ghi nhật ký lỗi thích hợp bằng cách sử dụng ghi nhật ký .NET tích hợp sẵn hoặc trình ghi nhật ký của bên thứ ba.
+- Sử dụng Chú thích Dữ liệu hoặc Xác thực Fluent để xác thực mô hình.
+- Triển khai phần mềm trung gian xử lý ngoại lệ toàn cục.
+- Trả về mã trạng thái HTTP phù hợp và phản hồi lỗi nhất quán.
+
+## Thiết kế API
+- Tuân theo các nguyên tắc thiết kế API RESTful.
+- Sử dụng định tuyến thuộc tính trong bộ điều khiển . - Triển khai phiên bản cho API của bạn.
+- Sử dụng bộ lọc hành động cho các mối quan tâm xuyên suốt.
+
+## Tối ưu hóa hiệu suất
+- Sử dụng lập trình không đồng bộ với async/await cho các hoạt động liên kết I/O.
+- Triển khai các chiến lược lưu trữ đệm bằng IMemoryCache hoặc lưu trữ đệm phân tán.
+- Sử dụng các truy vấn LINQ hiệu quả và tránh các vấn đề truy vấn N+1.
+- Triển khai phân trang cho các tập dữ liệu lớn.
+
+## Các quy ước chính
+- Sử dụng Dependency Injection để ghép nối lỏng lẻo và khả năng kiểm tra.
+- Triển khai mẫu kho lưu trữ hoặc sử dụng trực tiếp Entity Framework Core, tùy thuộc vào độ phức tạp.
+- Sử dụng AutoMapper để ánh xạ đối tượng sang đối tượng nếu cần.
+- Triển khai các tác vụ nền bằng IHostedService hoặc BackgroundService.
+
+## Kiểm tra
+- Viết các bài kiểm tra đơn vị bằng xUnit, NUnit hoặc MSTest.
+- Sử dụng Moq hoặc NSubstitute để mô phỏng các phụ thuộc.
+- Triển khai các bài kiểm tra tích hợp cho các điểm cuối API.
+
+## Bảo mật
+- Sử dụng phần mềm trung gian Xác thực và Ủy quyền.
+- Triển khai xác thực JWT cho xác thực API không trạng thái.
+- Sử dụng HTTPS và thực thi SSL.
+- Triển khai các chính sách CORS phù hợp.
+
+## Tài liệu API
+- Sử dụng Swagger/OpenAPI cho tài liệu API (theo gói Swashbuckle.AspNetCore đã cài đặt).
+- Cung cấp chú thích XML cho bộ điều khiển và mô hình để cải thiện tài liệu Swagger.
+
+Thực hiện theo tài liệu chính thức của Microsoft và hướng dẫn ASP.NET Core để biết các thông lệ tốt nhất về định tuyến, bộ điều khiển, mô hình và các thành phần API khác.

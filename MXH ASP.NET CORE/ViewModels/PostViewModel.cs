@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace MXH_ASP.NET_CORE.ViewModels
 {
@@ -11,6 +12,9 @@ namespace MXH_ASP.NET_CORE.ViewModels
         [StringLength(5000, ErrorMessage = "Nội dung tối đa 5000 ký tự")]
         [Display(Name = "Nội dung")]
         public string Content { get; set; }
+
+        [Display(Name = "Hình ảnh")]
+        public IFormFile? ImageFile { get; set; }
     }
 
     /// <summary>

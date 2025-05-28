@@ -1,44 +1,47 @@
-using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace MXH_ASP.NET_CORE.Services
 {
     /// <summary>
-    /// Interface xử lý gửi SMS
+    /// Interface định nghĩa các phương thức gửi SMS
     /// </summary>
     public interface ISmsSender
     {
         /// <summary>
-        /// Gửi SMS đến số điện thoại
+        /// Gửi SMS đến số điện thoại được chỉ định
         /// </summary>
-        Task<bool> SendSmsAsync(string phoneNumber, string message);
+        /// <param name="phoneNumber">Số điện thoại người nhận</param>
+        /// <param name="message">Nội dung tin nhắn</param>
+        /// <returns>Task đại diện cho quá trình gửi SMS</returns>
+        Task SendSmsAsync(string phoneNumber, string message);
     }
 
     /// <summary>
-    /// Implement giả lập gửi SMS
-    /// Trong môi trường thực tế, cần thay thế bằng dịch vụ SMS thật (Twilio, Vonage, etc.)
+    /// Class thực thi việc gửi SMS
     /// </summary>
-    public class FakeSmsSender : ISmsSender
+    public class SmsSender : ISmsSender
     {
-        private readonly ILogger<FakeSmsSender> _logger;
+        private readonly ILogger<SmsSender> _logger;
 
-        public FakeSmsSender(ILogger<FakeSmsSender> logger)
+        public SmsSender(ILogger<SmsSender> logger)
         {
             _logger = logger;
         }
 
         /// <summary>
-        /// Giả lập gửi SMS bằng cách ghi log
+        /// Gửi SMS đến số điện thoại được chỉ định
         /// </summary>
-        public Task<bool> SendSmsAsync(string phoneNumber, string message)
+        /// <param name="phoneNumber">Số điện thoại người nhận</param>
+        /// <param name="message">Nội dung tin nhắn</param>
+        /// <returns>Task đại diện cho quá trình gửi SMS</returns>
+        public async Task SendSmsAsync(string phoneNumber, string message)
         {
-            // Log thông tin SMS
-            _logger.LogInformation($"FAKE SMS to {phoneNumber}: {message}");
+            // TODO: Thay thế bằng dịch vụ SMS thực tế
+            // Hiện tại chỉ log thông tin để test
+            _logger.LogInformation($"Sending SMS to {phoneNumber}: {message}");
             
-            // Hiển thị thông tin trong Output window khi chạy debug
-            Debug.WriteLine($"FAKE SMS to {phoneNumber}: {message}");
-            
-            // Mô phỏng độ trễ khi gửi SMS
-            return Task.FromResult(true);
+            // Giả lập độ trễ của việc gửi SMS
+            await Task.Delay(1000);
         }
     }
 } 
