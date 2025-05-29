@@ -264,8 +264,12 @@
             
             // Phần thân
             postHtml += '<div class="card-body">';
+            postHtml += '<a href="/Post/Detail/' + post.id + '" class="text-dark text-decoration-none">';
             postHtml += '<p class="card-text">' + post.content + '</p>';
-            postHtml += imageElement;
+            if (post.imageUrl) {
+                postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+            }
+            postHtml += '</a>';
             postHtml += '<div class="d-flex justify-content-between text-muted small mb-2">';
             postHtml += '<div>' + likeCount + '</div>';
             postHtml += '<div>' + commentCount + '</div>';

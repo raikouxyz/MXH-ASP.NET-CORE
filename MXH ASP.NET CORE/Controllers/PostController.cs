@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
@@ -352,6 +352,64 @@ namespace MXH_ASP.NET_CORE.Controllers
             {
                 _logger.LogError(ex, $"Error loading posts for user {id}");
                 return StatusCode(500, "Có lỗi xảy ra khi tải bài viết");
+            }
+        }
+
+        /// <summary>
+        /// Hiển thị trang chi tiết bài viết
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Detail(int id)
+        {
+            try
+            {
+                // Lấy ID người dùng hiện tại
+                int? currentUserId = null;
+                if (User.Identity.IsAuthenticated)
+                {
+                    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (!string.IsNullOrEmpty(userId))
+                    {
+                        currentUserId = int.Parse(userId);
+                    }
+                }
+
+                // Lấy chi tiết bài viết
+                var post = await _context.Posts
+                    .Include(p => p.User)
+                    .Include(p => p.Comments)
+                    .Include(p => p.Likes)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (post == null)
+                {
+                    return NotFound();
+                }
+
+                var postViewModel = new PostViewModel
+                {
+                    Id = post.Id,
+                    Content = post.Content,
+                    ImageUrl = post.ImageUrl,
+                    CreatedAt = post.CreatedAt,
+                    UpdatedAt = post.UpdatedAt,
+                    UserId = post.UserId,
+                    Username = post.User.Username,
+                    UserFullName = post.User.FullName,
+                    ProfilePicture = post.User.ProfilePicture,
+                    CommentCount = post.Comments.Count,
+                    LikeCount = post.Likes.Count,
+                    CanEdit = currentUserId.HasValue && post.UserId == currentUserId.Value,
+                    CanDelete = currentUserId.HasValue && post.UserId == currentUserId.Value,
+                    IsLiked = currentUserId.HasValue && post.Likes.Any(l => l.UserId == currentUserId.Value)
+                };
+
+                return View(postViewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting post detail {id}");
+                return StatusCode(500, "Có lỗi xảy ra khi tải chi tiết bài viết");
             }
         }
     }

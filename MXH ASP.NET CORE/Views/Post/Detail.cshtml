@@ -1,0 +1,302 @@
+@model MXH_ASP.NET_CORE.ViewModels.PostViewModel
+
+@{
+    ViewData["Title"] = "Chi tiết bài viết";
+    var profilePicture = ViewBag.CurrentUserAvatar as string ?? "/uploads/avatars/default-avatar.svg";
+    var userName = ViewBag.CurrentUserName as string ?? "";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Nút quay lại -->
+            <div class="mb-4">
+                <a href="javascript:history.back()" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+
+            <!-- Bài viết -->
+            <div class="card shadow-sm">
+                <!-- Phần đầu bài viết -->
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">
+                    <div class="d-flex align-items-center">
+                        <img src="@(Model.ProfilePicture ?? "/uploads/avatars/default-avatar.svg")" 
+                             class="rounded-circle me-2" alt="Avatar" 
+                             style="width: 48px; height: 48px; object-fit: cover;">
+                        <div>
+                            <h6 class="mb-0 fw-bold">
+                                <a href="@Url.Action("Index", "Profile", new { id = Model.UserId })" 
+                                   class="text-dark text-decoration-none">@Model.UserFullName</a>
+                            </h6>
+                            <small class="text-muted">
+                                @if (Model.UpdatedAt.HasValue)
+                                {
+                                    <span title="Đã chỉnh sửa vào @Model.UpdatedAt.Value.ToString("dd/MM/yyyy HH:mm")">
+                                        @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm") (đã chỉnh sửa)
+                                    </span>
+                                }
+                                else
+                                {
+                                    @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                }
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Menu dropdown -->
+                    @if (Model.CanEdit || Model.CanDelete)
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-light btn-sm rounded-circle" type="button" 
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (Model.CanEdit)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Edit", "Post", new { id = Model.Id })">
+                                            <i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa
+                                        </a>
+                                    </li>
+                                }
+                                @if (Model.CanDelete)
+                                {
+                                    <li>
+                                        <form action="@Url.Action("Delete", "Post")" method="post" class="d-inline" 
+                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này không?');">
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-trash-alt me-2"></i> Xóa
+                                            </button>
+                                        </form>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                </div>
+
+                <!-- Nội dung bài viết -->
+                <div class="card-body">
+                    <p class="card-text">@Model.Content</p>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
+                    }
+
+                    <!-- Thống kê -->
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <div>
+                            @if (Model.LikeCount > 0)
+                            {
+                                <span><i class="fas fa-thumbs-up text-primary"></i> @Model.LikeCount lượt thích</span>
+                            }
+                        </div>
+                        <div>@Model.CommentCount bình luận</div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Nút tương tác -->
+                    <div class="d-flex justify-content-around mb-3">
+                        <button class="btn btn-light flex-fill me-1 @(Model.IsLiked ? "text-primary" : "")" 
+                                onclick="likePost(@Model.Id)" id="likeBtn-@Model.Id">
+                            <i class="fas @(Model.IsLiked ? "fa-thumbs-up-fill" : "fa-thumbs-up")"></i> Thích
+                        </button>
+                        <button class="btn btn-light flex-fill ms-1" onclick="focusComment(@Model.Id)">
+                            <i class="fas fa-comment"></i> Bình luận
+                        </button>
+                    </div>
+
+                    <hr>
+
+                    <!-- Phần bình luận -->
+                    <div class="comments-section" id="comments-@Model.Id">
+                        <!-- Bình luận sẽ được tải bằng AJAX -->
+                    </div>
+
+                    <!-- Form thêm bình luận -->
+                    <div class="d-flex mt-3">
+                        <img src="@profilePicture" class="rounded-circle me-2" alt="Avatar" 
+                             style="width: 32px; height: 32px; object-fit: cover;">
+                        <div class="flex-grow-1">
+                            <div class="input-group">
+                                <input type="text" class="form-control rounded-pill" 
+                                       placeholder="Viết bình luận..." id="commentInput-@Model.Id">
+                                <button class="btn btn-primary rounded-circle ms-2" type="button" 
+                                        onclick="addComment(@Model.Id)">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Tải bình luận khi trang được tải
+        $(document).ready(function() {
+            loadComments(@Model.Id);
+        });
+
+        // Hàm tải bình luận
+        function loadComments(postId) {
+            $.ajax({
+                url: '/api/Comment/post/' + postId,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        var commentsSection = $('#comments-' + postId);
+                        commentsSection.empty();
+                        
+                        if (!response.comments || response.comments.length === 0) {
+                            commentsSection.html('<p class="text-muted text-center small my-2">Chưa có bình luận nào.</p>');
+                            return;
+                        }
+                        
+                        response.comments.forEach(function(comment) {
+                            var imgSrc = comment.profilePicture || '/uploads/avatars/default-avatar.svg';
+                            var dateCreated = new Date(comment.createdAt).toLocaleString('vi-VN');
+                            var dateTitle = comment.updatedAt ? "Đã chỉnh sửa vào " + new Date(comment.updatedAt).toLocaleString('vi-VN') : "";
+                            var dateDisplay = comment.updatedAt ? dateCreated + " (đã chỉnh sửa)" : dateCreated;
+                            
+                            var commentHtml = '<div class="comment d-flex mb-2" id="comment-' + comment.id + '">';
+                            commentHtml += '<img src="' + imgSrc + '" class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">';
+                            commentHtml += '<div class="comment-content p-2 rounded bg-light flex-grow-1">';
+                            commentHtml += '<div class="d-flex justify-content-between align-items-center">';
+                            commentHtml += '<h6 class="mb-0 fw-bold"><a href="/Profile/Index/' + comment.userId + '" class="text-dark text-decoration-none">' + comment.userFullName + '</a></h6>';
+                            
+                            if (comment.canEdit || comment.canDelete) {
+                                commentHtml += '<div class="dropdown">';
+                                commentHtml += '<button class="btn btn-sm text-muted p-0" type="button" data-bs-toggle="dropdown">';
+                                commentHtml += '<i class="fas fa-ellipsis-h"></i>';
+                                commentHtml += '</button>';
+                                commentHtml += '<ul class="dropdown-menu dropdown-menu-end">';
+                                if (comment.canEdit) {
+                                    commentHtml += '<li><button class="dropdown-item" onclick="editComment(' + comment.id + ', \'' + comment.content.replace(/'/g, "\\'") + '\')">';
+                                    commentHtml += '<i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa</button></li>';
+                                }
+                                if (comment.canDelete) {
+                                    commentHtml += '<li><button class="dropdown-item text-danger" onclick="deleteComment(' + comment.id + ')">';
+                                    commentHtml += '<i class="fas fa-trash-alt me-2"></i> Xóa</button></li>';
+                                }
+                                commentHtml += '</ul></div>';
+                            }
+                            
+                            commentHtml += '</div>';
+                            commentHtml += '<p class="mb-0 comment-text">' + comment.content + '</p>';
+                            commentHtml += '<small class="text-muted">' + dateDisplay + '</small>';
+                            commentHtml += '</div>';
+                            commentHtml += '</div>';
+                            
+                            commentsSection.append(commentHtml);
+                        });
+                    } else {
+                        $('#comments-' + postId).html('<p class="text-danger">Không thể tải bình luận. Vui lòng thử lại sau.</p>');
+                    }
+                },
+                error: function() {
+                    $('#comments-' + postId).html('<p class="text-danger">Không thể tải bình luận. Vui lòng thử lại sau.</p>');
+                }
+            });
+        }
+
+        // Hàm thêm bình luận
+        function addComment(postId) {
+            var commentText = $('#commentInput-' + postId).val().trim();
+            if (!commentText) return;
+            
+            $.ajax({
+                url: '/api/Comment',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: commentText,
+                    postId: parseInt(postId)
+                }),
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Xóa nội dung input
+                        $('#commentInput-' + postId).val('');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                        
+                        // Cập nhật số lượng bình luận
+                        var commentCountElem = $('.card-body > .d-flex.justify-content-between.text-muted.small.mb-3 > div:last-child');
+                        var currentCount = parseInt(commentCountElem.text()) || 0;
+                        commentCountElem.text((currentCount + 1) + ' bình luận');
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra khi thêm bình luận');
+                    }
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Có lỗi xảy ra khi thêm bình luận';
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response && response.message) {
+                            errorMessage = response.message;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing error response:', e);
+                    }
+                    alert(errorMessage);
+                }
+            });
+        }
+
+        // Hàm focus vào ô comment
+        function focusComment(postId) {
+            $('#commentInput-' + postId).focus();
+        }
+
+        // Hàm thích bài viết
+        function likePost(postId) {
+            $.ajax({
+                url: '/api/Like/' + postId,
+                type: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Cập nhật UI
+                        var likeBtn = $('#likeBtn-' + postId);
+                        var likeIcon = likeBtn.find('i');
+                        
+                        if (response.liked) {
+                            likeBtn.addClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-up-fill');
+                        } else {
+                            likeBtn.removeClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up-fill').addClass('fa-thumbs-up');
+                        }
+                        
+                        // Cập nhật số lượt thích
+                        var likeCountElem = $('.card-body > .d-flex.justify-content-between.text-muted.small.mb-3 > div:first-child');
+                        if (response.likeCount > 0) {
+                            likeCountElem.html('<span><i class="fas fa-thumbs-up text-primary"></i> ' + response.likeCount + ' lượt thích</span>');
+                        } else {
+                            likeCountElem.html('');
+                        }
+                    } else {
+                        alert(response.message || 'Có lỗi xảy ra khi thích bài viết');
+                    }
+                },
+                error: function() {
+                    alert('Có lỗi xảy ra khi thích bài viết');
+                }
+            });
+        }
+    </script>
+}
