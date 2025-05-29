@@ -4,6 +4,8 @@
     ViewData["Title"] = Model.FullName + " - Trang cá nhân";
 }
 
+<input type="hidden" id="current-user-avatar" value="@((Model.ProfilePicture ?? "/uploads/avatars/default-avatar.svg"))" />
+
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -144,62 +146,389 @@
         }
 
         function renderPost(post) {
+            var imgSrc = post.profilePicture || '/uploads/avatars/default-avatar.svg';
             var dateCreated = new Date(post.createdAt).toLocaleString('vi-VN');
             var dateTitle = post.updatedAt ? "Đã chỉnh sửa vào " + new Date(post.updatedAt).toLocaleString('vi-VN') : "";
             var dateDisplay = post.updatedAt ? dateCreated + " (đã chỉnh sửa)" : dateCreated;
             
-            var postHtml = '<div class="card shadow-sm mb-4">';
-            
-            // Phần đầu bài viết
-            postHtml += '<div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">';
-            postHtml += '<div class="d-flex align-items-center">';
-            postHtml += '<img src="' + (post.profilePicture || '/uploads/avatars/default-avatar.svg') + '" class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">';
-            postHtml += '<div>';
-            postHtml += '<h6 class="mb-0 fw-bold">' + post.userFullName + '</h6>';
-            postHtml += '<small class="text-muted">' + dateDisplay + '</small>';
-            postHtml += '</div>';
-            postHtml += '</div>';
-            
-            // Nút chỉnh sửa/xóa nếu là bài viết của người dùng hiện tại
-            if (post.canEdit || post.canDelete) {
-                postHtml += '<div class="dropdown">';
-                postHtml += '<button class="btn btn-light btn-sm rounded-circle" type="button" data-bs-toggle="dropdown">';
-                postHtml += '<i class="fas fa-ellipsis-v"></i>';
-                postHtml += '</button>';
-                postHtml += '<ul class="dropdown-menu dropdown-menu-end">';
-                if (post.canEdit) {
-                    postHtml += '<li><a class="dropdown-item" href="/Post/Edit/' + post.id + '"><i class="fas fa-pencil-alt me-2"></i>Chỉnh sửa</a></li>';
-                }
-                if (post.canDelete) {
-                    postHtml += '<li><form action="/Post/Delete" method="post" class="d-inline"><input type="hidden" name="id" value="' + post.id + '" /><input type="hidden" name="__RequestVerificationToken" value="' + $('input[name="__RequestVerificationToken"]').val() + '" /><button type="submit" class="dropdown-item text-danger" onclick="return confirm(\'Bạn có chắc chắn muốn xóa bài viết này?\')"><i class="fas fa-trash-alt me-2"></i>Xóa</button></form></li>';
-                }
-                postHtml += '</ul>';
-                postHtml += '</div>';
+            // Tạo các phần của dropdown menu
+            var editLink = '';
+            if (post.canEdit) {
+                editLink = '<li><a class="dropdown-item" href="/Post/Edit/' + post.id + '"><i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa</a></li>';
             }
             
+            var deleteBtn = '';
+            if (post.canDelete) {
+                deleteBtn = '<li><form action="/Post/Delete" method="post" class="d-inline" onsubmit="return confirm(\'Bạn có chắc chắn muốn xóa bài viết này không?\');"><input type="hidden" name="id" value="' + post.id + '" /><input type="hidden" name="__RequestVerificationToken" value="' + $('input[name="__RequestVerificationToken"]').val() + '" /><button type="submit" class="dropdown-item text-danger"><i class="fas fa-trash-alt me-2"></i> Xóa</button></form></li>';
+            }
+            
+            var dropdownMenu = '';
+            if (post.canEdit || post.canDelete) {
+                dropdownMenu = '<div class="dropdown"><button class="btn btn-light btn-sm rounded-circle" type="button" id="dropdownMenuButton-' + post.id + '" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i></button><ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton-' + post.id + '">' + editLink + deleteBtn + '</ul></div>';
+            }
+            
+            var imageElement = '';
+            if (post.imageUrl) {
+                imageElement = '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+            }
+            
+            var likeCount = '';
+            if (post.likeCount > 0) {
+                likeCount = '<span><i class="fas fa-thumbs-up text-primary"></i> ' + post.likeCount + '</span>';
+            }
+            
+            var commentCount = '';
+            if (post.commentCount > 0) {
+                commentCount = '<span>' + post.commentCount + ' bình luận</span>';
+            }
+            
+            var likeButtonClass = post.isLiked ? 'text-primary' : '';
+            var likeIconClass = post.isLiked ? 'fa-thumbs-up-fill' : 'fa-thumbs-up';
+            
+            // Xây dựng HTML cho bài viết
+            var postHtml = '<div class="card shadow-sm mb-4 post-card" id="post-' + post.id + '">';
+            
+            // Phần đầu
+            postHtml += '<div class="card-header bg-white d-flex justify-content-between align-items-center border-0 pb-0">';
+            postHtml += '<div class="d-flex align-items-center">';
+            postHtml += '<img src="' + imgSrc + '" class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">';
+            postHtml += '<div>';
+            postHtml += '<h6 class="mb-0 fw-bold"><a href="/Profile/Index/' + post.userId + '" class="text-dark text-decoration-none">' + post.userFullName + '</a></h6>';
+            postHtml += '<small class="text-muted">';
+            
+            if (post.updatedAt) {
+                postHtml += '<span title="' + dateTitle + '">' + dateDisplay + '</span>';
+            } else {
+                postHtml += dateDisplay;
+            }
+            
+            postHtml += '</small>';
+            postHtml += '</div>';
+            postHtml += '</div>';
+            postHtml += dropdownMenu;
             postHtml += '</div>';
             
-            // Nội dung bài viết
+            // Phần thân
             postHtml += '<div class="card-body">';
+            postHtml += '<a href="/Post/Detail/' + post.id + '" class="text-dark text-decoration-none">';
             postHtml += '<p class="card-text">' + post.content + '</p>';
             if (post.imageUrl) {
                 postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
             }
-            
-            // Thống kê
+            postHtml += '</a>';
             postHtml += '<div class="d-flex justify-content-between text-muted small mb-2">';
-            if (post.likeCount > 0) {
-                postHtml += '<div><i class="fas fa-thumbs-up text-primary"></i> ' + post.likeCount + '</div>';
-            }
-            if (post.commentCount > 0) {
-                postHtml += '<div>' + post.commentCount + ' bình luận</div>';
-            }
+            postHtml += '<div>' + likeCount + '</div>';
+            postHtml += '<div>' + commentCount + '</div>';
             postHtml += '</div>';
+            postHtml += '<hr>';
             
+            // Phần nút
+            postHtml += '<div class="d-flex justify-content-around">';
+            postHtml += '<button class="btn btn-light flex-fill me-1 ' + likeButtonClass + '" id="likeBtn-' + post.id + '" onclick="likePost(' + post.id + ')">';
+            postHtml += '<i class="fas ' + likeIconClass + '"></i> Thích';
+            postHtml += '</button>';
+            postHtml += '<button class="btn btn-light flex-fill ms-1" id="commentBtn-' + post.id + '" onclick="focusComment(' + post.id + ')">';
+            postHtml += '<i class="fas fa-comment"></i> Bình luận';
+            postHtml += '</button>';
+            postHtml += '</div>';
+            postHtml += '<hr>';
+            
+            // Phần comment
+            postHtml += '<div class="comments-section" id="comments-' + post.id + '">';
+            postHtml += '<!-- Hiển thị các bình luận ở đây -->';
+            postHtml += '</div>';
+            postHtml += '<div class="d-flex align-items-center mt-3">';
+            postHtml += '<img src="' + $('#current-user-avatar').val() + '" class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">';
+            postHtml += '<div class="input-group flex-grow-1">';
+            postHtml += '<input type="text" class="form-control rounded-pill" placeholder="Viết bình luận..." id="commentInput-' + post.id + '">';
+            postHtml += '<button class="btn btn-primary rounded-circle ms-2" type="button" onclick="addComment(' + post.id + ')">';
+            postHtml += '<i class="fas fa-paper-plane"></i>';
+            postHtml += '</button>';
+            postHtml += '</div>';
+            postHtml += '</div>';
             postHtml += '</div>';
             postHtml += '</div>';
             
             return postHtml;
         }
+
+        // Hàm tải bình luận
+        function loadComments(postId) {
+            $.ajax({
+                url: '/api/Comment/post/' + postId,
+                type: 'GET',
+                success: function(data) {
+                    if (data.success) {
+                        var commentsSection = $('#comments-' + postId);
+                        commentsSection.empty();
+                        
+                        // Nếu không có bình luận
+                        if (data.comments.length === 0) {
+                            commentsSection.html('<p class="text-muted text-center small my-2">Chưa có bình luận nào.</p>');
+                            return;
+                        }
+                        
+                        // Render bình luận
+                        data.comments.forEach(function(comment) {
+                            var imgSrc = comment.profilePicture || '/uploads/avatars/default-avatar.svg';
+                            var dateCreated = new Date(comment.createdAt).toLocaleString('vi-VN');
+                            var dateTitle = comment.updatedAt ? "Đã chỉnh sửa vào " + new Date(comment.updatedAt).toLocaleString('vi-VN') : "";
+                            var dateDisplay = comment.updatedAt ? dateCreated + " (đã chỉnh sửa)" : dateCreated;
+                            
+                            // Tạo nút chỉnh sửa
+                            var editButton = '';
+                            if (comment.canEdit) {
+                                editButton = '<li><button class="dropdown-item" onclick="editComment(' + comment.id + ', \'' + comment.content.replace(/'/g, "\\'") + '\')">' +
+                                    '<i class="fas fa-pencil-alt me-2"></i> Chỉnh sửa' +
+                                '</button></li>';
+                            }
+                            
+                            // Tạo nút xóa
+                            var deleteButton = '';
+                            if (comment.canDelete) {
+                                deleteButton = '<li><button class="dropdown-item text-danger" onclick="deleteComment(' + comment.id + ')">' +
+                                    '<i class="fas fa-trash-alt me-2"></i> Xóa' +
+                                '</button></li>';
+                            }
+                            
+                            // Tạo dropdown menu
+                            var dropdownMenu = '';
+                            if (comment.canEdit || comment.canDelete) {
+                                dropdownMenu = '<div class="dropdown">' +
+                                    '<button class="btn btn-sm text-muted p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">' +
+                                    '<i class="fas fa-ellipsis-h"></i>' +
+                                    '</button>' +
+                                    '<ul class="dropdown-menu dropdown-menu-end">' +
+                                    editButton +
+                                    deleteButton +
+                                    '</ul>' +
+                                    '</div>';
+                            }
+                            
+                            // Tạo cấu trúc bình luận
+                            var commentHtml = '<div class="comment d-flex mb-2" id="comment-' + comment.id + '">';
+                            commentHtml += '<img src="' + imgSrc + '" class="rounded-circle me-2" alt="Avatar" style="width: 32px; height: 32px; object-fit: cover;">';
+                            commentHtml += '<div class="comment-content p-2 rounded bg-light flex-grow-1">';
+                            commentHtml += '<div class="d-flex justify-content-between align-items-center">';
+                            commentHtml += '<h6 class="mb-0 fw-bold"><a href="/Profile/Index/' + comment.userId + '" class="text-dark text-decoration-none">' + comment.userFullName + '</a></h6>';
+                            commentHtml += dropdownMenu;
+                            commentHtml += '</div>';
+                            commentHtml += '<p class="mb-0 comment-text">' + comment.content + '</p>';
+                            commentHtml += '<small class="text-muted">';
+                            
+                            if (comment.updatedAt) {
+                                commentHtml += '<span title="' + dateTitle + '">' + dateDisplay + '</span>';
+                            } else {
+                                commentHtml += dateDisplay;
+                            }
+                            
+                            commentHtml += '</small>';
+                            commentHtml += '</div>';
+                            commentHtml += '</div>';
+                            commentHtml += '</div>';
+                            
+                            commentsSection.append(commentHtml);
+                        });
+                        
+                        // Cập nhật số lượng bình luận
+                        var commentCountElem = $('#post-' + postId + ' .card-body > .d-flex.justify-content-between.text-muted.small.mb-2 > div:last-child');
+                        commentCountElem.html('<span>' + data.comments.length + ' bình luận</span>');
+                    } else {
+                        console.error('Error loading comments:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error loading comments:', error);
+                    $('#comments-' + postId).html('<p class="text-danger">Không thể tải bình luận. Vui lòng thử lại sau.</p>');
+                }
+            });
+        }
+
+        // Hàm thêm bình luận
+        function addComment(postId) {
+            var commentText = $('#commentInput-' + postId).val().trim();
+            if (!commentText) return;
+            
+            $.ajax({
+                url: '/api/Comment',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: commentText,
+                    postId: postId
+                }),
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Xóa nội dung input
+                        $('#commentInput-' + postId).val('');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error adding comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error adding comment:', error);
+                }
+            });
+        }
+
+        // Hàm focus vào ô comment
+        function focusComment(postId) {
+            loadComments(postId);
+            $('#commentInput-' + postId).focus();
+        }
+
+        // Hàm thích bài viết
+        function likePost(postId) {
+            $.ajax({
+                url: '/api/Like/' + postId,
+                type: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Cập nhật UI
+                        var likeBtn = $('#likeBtn-' + postId);
+                        var likeIcon = likeBtn.find('i');
+                        
+                        if (data.liked) {
+                            likeBtn.addClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up').addClass('fa-thumbs-up-fill');
+                        } else {
+                            likeBtn.removeClass('text-primary');
+                            likeIcon.removeClass('fa-thumbs-up-fill').addClass('fa-thumbs-up');
+                        }
+                        
+                        // Cập nhật số lượt thích
+                        var likeCountElem = $('#post-' + postId + ' .card-body > .d-flex.justify-content-between.text-muted.small.mb-2 > div:first-child');
+                        if (data.likeCount > 0) {
+                            likeCountElem.html('<span><i class="fas fa-thumbs-up text-primary"></i> ' + data.likeCount + '</span>');
+                        } else {
+                            likeCountElem.html('');
+                        }
+                    } else {
+                        console.error('Error liking post:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error liking post:', error);
+                }
+            });
+        }
+
+        // Hàm chỉnh sửa bình luận
+        function editComment(commentId, content) {
+            // Hiển thị modal chỉnh sửa
+            if (!$('#editCommentModal').length) {
+                var modalHtml = '<div class="modal fade" id="editCommentModal" tabindex="-1" aria-hidden="true">';
+                modalHtml += '<div class="modal-dialog">';
+                modalHtml += '<div class="modal-content">';
+                modalHtml += '<div class="modal-header">';
+                modalHtml += '<h5 class="modal-title">Chỉnh sửa bình luận</h5>';
+                modalHtml += '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>';
+                modalHtml += '</div>';
+                modalHtml += '<div class="modal-body">';
+                modalHtml += '<textarea id="editCommentContent" class="form-control" rows="3"></textarea>';
+                modalHtml += '<input type="hidden" id="editCommentId" />';
+                modalHtml += '</div>';
+                modalHtml += '<div class="modal-footer">';
+                modalHtml += '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>';
+                modalHtml += '<button type="button" class="btn btn-primary" onclick="updateComment()">Lưu thay đổi</button>';
+                modalHtml += '</div>';
+                modalHtml += '</div>';
+                modalHtml += '</div>';
+                modalHtml += '</div>';
+                
+                $('body').append(modalHtml);
+            }
+            
+            $('#editCommentId').val(commentId);
+            $('#editCommentContent').val(content);
+            
+            // Hiển thị modal
+            var modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+            modal.show();
+        }
+
+        // Hàm cập nhật bình luận
+        function updateComment() {
+            var commentId = $('#editCommentId').val();
+            var content = $('#editCommentContent').val().trim();
+            
+            if (!content) return;
+            
+            $.ajax({
+                url: '/api/Comment/' + commentId,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    content: content,
+                    postId: 0 // Không quan trọng trong trường hợp cập nhật
+                }),
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Đóng modal
+                        $('#editCommentModal').modal('hide');
+                        
+                        // Tìm bài viết của bình luận này
+                        var post = $('#comment-' + commentId).closest('.post-card');
+                        var postId = post.attr('id').replace('post-', '');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error updating comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error updating comment:', error);
+                }
+            });
+        }
+
+        // Hàm xóa bình luận
+        function deleteComment(commentId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa bình luận này không?')) return;
+            
+            $.ajax({
+                url: '/api/Comment/' + commentId,
+                type: 'DELETE',
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Tìm bài viết của bình luận này
+                        var post = $('#comment-' + commentId).closest('.post-card');
+                        var postId = post.attr('id').replace('post-', '');
+                        
+                        // Tải lại bình luận
+                        loadComments(postId);
+                    } else {
+                        console.error('Error deleting comment:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error deleting comment:', error);
+                }
+            });
+        }
+
+        window.likePost = likePost;
+        window.addComment = addComment;
+        window.loadComments = loadComments;
+        window.focusComment = focusComment;
+        window.editComment = editComment;
+        window.updateComment = updateComment;
+        window.deleteComment = deleteComment;
     </script>
 } 
