@@ -84,21 +84,20 @@
                     <p class="card-text">@Model.Content</p>
                     @if (Model.ImageUrls != null && Model.ImageUrls.Any())
                     {
-                        if (Model.ImageUrls.Count == 1)
-                        {
-                            <img src="@Model.ImageUrls[0]" class="img-fluid rounded mb-3" alt="Post image">
-                        }
-                        else
-                        {
-                            <div class="row g-2 mb-3">
-                                @foreach (var imageUrl in Model.ImageUrls)
-                                {
-                                    <div class="col-@(Model.ImageUrls.Count == 2 ? "6" : "4")">
-                                        <img src="@imageUrl" class="img-fluid rounded" alt="Post image" style="width: 100%; height: 200px; object-fit: cover;">
-                                    </div>
-                                }
-                            </div>
-                        }
+                        <div class="image-grid image-grid-@Model.ImageUrls.Count">
+                            @foreach (var imageUrl in Model.ImageUrls)
+                            {
+                                <div class="image-wrapper">
+                                    <img src="@imageUrl" class="img-fluid rounded" alt="Post image">
+                                    @if (Model.ImageUrls.Count > 4 && Model.ImageUrls.IndexOf(imageUrl) == 3)
+                                    {
+                                        <div class="image-overlay">
+                                            +@(Model.ImageUrls.Count - 4)
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
                     }
 
                     <!-- Thống kê -->
@@ -314,3 +313,151 @@
         }
     </script>
 }
+
+<style>
+    .image-grid {
+        display: grid;
+        gap: 4px;
+        margin-bottom: 1rem;
+    }
+
+    /* Grid cho 1 ảnh */
+    .image-grid-1 {
+        grid-template-columns: 1fr;
+    }
+
+    .image-grid-1 .image-wrapper {
+        aspect-ratio: 16/9;
+    }
+
+    /* Grid cho 2 ảnh */
+    .image-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .image-grid-2 .image-wrapper {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 3 ảnh */
+    .image-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+
+    .image-grid-3 .image-wrapper:first-child {
+        grid-column: 1 / -1;
+        aspect-ratio: 16/9;
+    }
+
+    .image-grid-3 .image-wrapper:not(:first-child) {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 4 ảnh */
+    .image-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+
+    .image-grid-4 .image-wrapper {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 5 ảnh trở lên */
+    .image-grid-5,
+    .image-grid-6,
+    .image-grid-7,
+    .image-grid-8,
+    .image-grid-9 {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+
+    .image-grid-5 .image-wrapper:first-child,
+    .image-grid-6 .image-wrapper:first-child,
+    .image-grid-7 .image-wrapper:first-child,
+    .image-grid-8 .image-wrapper:first-child,
+    .image-grid-9 .image-wrapper:first-child {
+        grid-column: 1 / -1;
+        aspect-ratio: 16/9;
+    }
+
+    .image-grid-5 .image-wrapper:not(:first-child),
+    .image-grid-6 .image-wrapper:not(:first-child),
+    .image-grid-7 .image-wrapper:not(:first-child),
+    .image-grid-8 .image-wrapper:not(:first-child),
+    .image-grid-9 .image-wrapper:not(:first-child) {
+        aspect-ratio: 1/1;
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .image-wrapper:hover img {
+        transform: scale(1.05);
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    media (max-width: 768px) {
+        .image-grid-2,
+        .image-grid-3,
+        .image-grid-4,
+        .image-grid-5,
+        .image-grid-6,
+        .image-grid-7,
+        .image-grid-8,
+        .image-grid-9 {
+            grid-template-columns: 1fr;
+        }
+
+        .image-grid-3 .image-wrapper:first-child,
+        .image-grid-5 .image-wrapper:first-child,
+        .image-grid-6 .image-wrapper:first-child,
+        .image-grid-7 .image-wrapper:first-child,
+        .image-grid-8 .image-wrapper:first-child,
+        .image-grid-9 .image-wrapper:first-child {
+            aspect-ratio: 16/9;
+        }
+
+        .image-grid-3 .image-wrapper:not(:first-child),
+        .image-grid-4 .image-wrapper,
+        .image-grid-5 .image-wrapper:not(:first-child),
+        .image-grid-6 .image-wrapper:not(:first-child),
+        .image-grid-7 .image-wrapper:not(:first-child),
+        .image-grid-8 .image-wrapper:not(:first-child),
+        .image-grid-9 .image-wrapper:not(:first-child) {
+            aspect-ratio: 1/1;
+        }
+    }
+</style>

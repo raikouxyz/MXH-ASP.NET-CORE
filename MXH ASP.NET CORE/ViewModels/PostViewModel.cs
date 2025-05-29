@@ -14,7 +14,7 @@ namespace MXH_ASP.NET_CORE.ViewModels
         public string Content { get; set; }
 
         [Display(Name = "Hình ảnh")]
-        public List<IFormFile>? ImageFiles { get; set; }
+        public List<IFormFile> ImageFiles { get; set; } = new List<IFormFile>();
     }
 
     /// <summary>

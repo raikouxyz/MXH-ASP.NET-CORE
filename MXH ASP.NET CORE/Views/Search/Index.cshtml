@@ -175,7 +175,7 @@
             // Tự động tìm kiếm khi trang được tải
             performSearch();
 
-            // Hàm render bài viết (tái sử dụng từ trang Feed)
+            // Hàm render bài viết
             function renderPost(post) {
                 var dateCreated = new Date(post.createdAt).toLocaleString('vi-VN');
                 var dateTitle = post.updatedAt ? "Đã chỉnh sửa vào " + new Date(post.updatedAt).toLocaleString('vi-VN') : "";
@@ -216,9 +216,23 @@
                 postHtml += '<div class="card-body">';
                 postHtml += '<a href="/Post/Detail/' + post.id + '" class="text-dark text-decoration-none">';
                 postHtml += '<p class="card-text">' + post.content + '</p>';
-                if (post.imageUrl) {
-                    postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+                
+                // Hiển thị hình ảnh theo grid
+                if (post.imageUrls && post.imageUrls.length > 0) {
+                    postHtml += '<div class="image-grid image-grid-' + post.imageUrls.length + '">';
+                    post.imageUrls.forEach(function(imageUrl, index) {
+                        postHtml += '<div class="image-wrapper">';
+                        postHtml += '<img src="' + imageUrl + '" class="img-fluid rounded" alt="Post image">';
+                        if (index === 3 && post.imageUrls.length > 4) {
+                            postHtml += '<div class="image-overlay">';
+                            postHtml += '+' + (post.imageUrls.length - 4);
+                            postHtml += '</div>';
+                        }
+                        postHtml += '</div>';
+                    });
+                    postHtml += '</div>';
                 }
+                
                 postHtml += '</a>';
                 
                 // Thống kê
@@ -238,4 +252,152 @@
             }
         });
     </script>
-} 
+}
+
+<style>
+    .image-grid {
+        display: grid;
+        gap: 4px;
+        margin-bottom: 1rem;
+    }
+
+    /* Grid cho 1 ảnh */
+    .image-grid-1 {
+        grid-template-columns: 1fr;
+    }
+
+    .image-grid-1 .image-wrapper {
+        aspect-ratio: 16/9;
+    }
+
+    /* Grid cho 2 ảnh */
+    .image-grid-2 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .image-grid-2 .image-wrapper {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 3 ảnh */
+    .image-grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+
+    .image-grid-3 .image-wrapper:first-child {
+        grid-column: 1 / -1;
+        aspect-ratio: 16/9;
+    }
+
+    .image-grid-3 .image-wrapper:not(:first-child) {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 4 ảnh */
+    .image-grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+
+    .image-grid-4 .image-wrapper {
+        aspect-ratio: 1/1;
+    }
+
+    /* Grid cho 5 ảnh trở lên */
+    .image-grid-5,
+    .image-grid-6,
+    .image-grid-7,
+    .image-grid-8,
+    .image-grid-9 {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+
+    .image-grid-5 .image-wrapper:first-child,
+    .image-grid-6 .image-wrapper:first-child,
+    .image-grid-7 .image-wrapper:first-child,
+    .image-grid-8 .image-wrapper:first-child,
+    .image-grid-9 .image-wrapper:first-child {
+        grid-column: 1 / -1;
+        aspect-ratio: 16/9;
+    }
+
+    .image-grid-5 .image-wrapper:not(:first-child),
+    .image-grid-6 .image-wrapper:not(:first-child),
+    .image-grid-7 .image-wrapper:not(:first-child),
+    .image-grid-8 .image-wrapper:not(:first-child),
+    .image-grid-9 .image-wrapper:not(:first-child) {
+        aspect-ratio: 1/1;
+    }
+
+    .image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .image-wrapper:hover img {
+        transform: scale(1.05);
+    }
+
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    media (max-width: 768px) {
+        .image-grid-2,
+        .image-grid-3,
+        .image-grid-4,
+        .image-grid-5,
+        .image-grid-6,
+        .image-grid-7,
+        .image-grid-8,
+        .image-grid-9 {
+            grid-template-columns: 1fr;
+        }
+
+        .image-grid-3 .image-wrapper:first-child,
+        .image-grid-5 .image-wrapper:first-child,
+        .image-grid-6 .image-wrapper:first-child,
+        .image-grid-7 .image-wrapper:first-child,
+        .image-grid-8 .image-wrapper:first-child,
+        .image-grid-9 .image-wrapper:first-child {
+            aspect-ratio: 16/9;
+        }
+
+        .image-grid-3 .image-wrapper:not(:first-child),
+        .image-grid-4 .image-wrapper,
+        .image-grid-5 .image-wrapper:not(:first-child),
+        .image-grid-6 .image-wrapper:not(:first-child),
+        .image-grid-7 .image-wrapper:not(:first-child),
+        .image-grid-8 .image-wrapper:not(:first-child),
+        .image-grid-9 .image-wrapper:not(:first-child) {
+            aspect-ratio: 1/1;
+        }
+    }
+</style> 
