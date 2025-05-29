@@ -140,6 +140,7 @@
         $(document).ready(function() {
             loadPosts();
             loadFriendsList();
+            loadSuggestedFriends();
             checkNewMessagesCount(); // Kiểm tra lần đầu khi tải trang
             
             // Tự động đóng thông báo sau 5 giây
@@ -686,6 +687,51 @@
                         $('.nav-link.ps-0.text-dark.d-flex.align-items-center.justify-content-between').removeAttr('title');
                     }
                 });
+        }
+
+        // Hàm tải gợi ý kết bạn
+        function loadSuggestedFriends() {
+            $.ajax({
+                url: '/Friend/GetSuggestions',
+                type: 'GET',
+                success: function(data) {
+                    var container = $('#suggested-friends-container');
+                    container.empty();
+                    
+                    if (data.success) {
+                        if (data.suggestions.length === 0) {
+                            container.html('<p class="text-muted small text-center py-3">Hiện tại không có gợi ý kết bạn nào.</p>');
+                            return;
+                        }
+                        
+                        data.suggestions.forEach(function(user) {
+                            var userHtml = '<div class="d-flex align-items-center p-3 border-bottom">';
+                            userHtml += '<img src="' + (user.profilePicture || '/uploads/avatars/default-avatar.svg') + '" class="rounded-circle me-2" alt="Avatar" style="width: 40px; height: 40px; object-fit: cover;">';
+                            userHtml += '<div class="flex-grow-1 min-width-0">';
+                            userHtml += '<a href="/Profile/Index/' + user.userId + '" class="text-dark text-decoration-none">';
+                            userHtml += '<h6 class="mb-0 fw-bold text-truncate">' + user.fullName + '</h6>';
+                            userHtml += '<p class="mb-0 small text-muted text-truncate">' + '\u0040' + user.username + '</p>';
+                            userHtml += '</a>';
+                            userHtml += '</div>';
+                            userHtml += '<form action="/Friend/SendRequest" method="post" class="d-inline">';
+                            userHtml += '<input type="hidden" name="userId" value="' + user.userId + '" />';
+                            userHtml += '@Html.AntiForgeryToken()';
+                            userHtml += '<button type="submit" class="btn btn-primary btn-sm">';
+                            userHtml += '<i class="fas fa-user-plus"></i>';
+                            userHtml += '</button>';
+                            userHtml += '</form>';
+                            userHtml += '</div>';
+                            
+                            container.append(userHtml);
+                        });
+                    } else {
+                        container.html('<p class="text-muted small text-center py-3">Không thể tải gợi ý kết bạn.</p>');
+                    }
+                },
+                error: function() {
+                    $('#suggested-friends-container').html('<p class="text-muted small text-center py-3">Không thể tải gợi ý kết bạn.</p>');
+                }
+            });
         }
     </script>
 }
