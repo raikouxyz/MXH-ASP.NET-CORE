@@ -29,6 +29,9 @@
                         <a href="@Url.Action("Index", "Friend")" class="list-group-item list-group-item-action">
                             <i class="fas fa-users me-2"></i> Bạn bè
                         </a>
+                        <a href="@Url.Action("MyFavorites", "FavoritePost")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-heart me-2"></i> Bài viết yêu thích
+                        </a>
                         <a href="@Url.Action("Index", "Message")" class="list-group-item list-group-item-action">
                             <i class="fas fa-envelope me-2"></i> Tin nhắn
                             <span id="new-messages-badge" class="badge bg-danger rounded-pill d-none">0</span>
@@ -220,8 +223,18 @@
             }
             
             var imageElement = '';
-            if (post.imageUrl) {
-                imageElement = '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+            if (post.imageUrls && post.imageUrls.length > 0) {
+                if (post.imageUrls.length === 1) {
+                    imageElement = '<img src="' + post.imageUrls[0] + '" class="img-fluid rounded mb-3" alt="Post image" style="max-height: 500px; width: 100%; object-fit: cover;">';
+                } else {
+                    imageElement = '<div class="row g-2 mb-3">';
+                    post.imageUrls.forEach(function(imageUrl, index) {
+                        imageElement += '<div class="col-md-6">';
+                        imageElement += '<img src="' + imageUrl + '" class="img-fluid rounded" alt="Post image" style="height: 200px; width: 100%; object-fit: cover;">';
+                        imageElement += '</div>';
+                    });
+                    imageElement += '</div>';
+                }
             }
             
             var likeCount = '';
@@ -236,6 +249,9 @@
             
             var likeButtonClass = post.isLiked ? 'text-primary' : '';
             var likeIconClass = post.isLiked ? 'fa-thumbs-up-fill' : 'fa-thumbs-up';
+            
+            var favoriteButtonClass = post.isFavorite ? 'text-danger' : '';
+            var favoriteIconClass = post.isFavorite ? 'fa-heart' : 'fa-heart';
             
             // Lấy biến từ Razor và chuyển sang JavaScript - lưu ý phải dùng đúng cú pháp để lấy giá trị thực
             var profilePictureValue = '@(profilePicture)';
@@ -267,8 +283,22 @@
             postHtml += '<div class="card-body">';
             postHtml += '<a href="/Post/Detail/' + post.id + '" class="text-dark text-decoration-none">';
             postHtml += '<p class="card-text">' + post.content + '</p>';
-            if (post.imageUrl) {
-                postHtml += '<img src="' + post.imageUrl + '" class="img-fluid rounded mb-3" alt="Post image">';
+            if (post.imageUrls && post.imageUrls.length > 0) {
+                if (post.imageUrls.length === 1) {
+                    postHtml += '<div class="post-image-container mb-3">';
+                    postHtml += '<img src="' + post.imageUrls[0] + '" class="img-fluid rounded" alt="Post image" style="max-height: 600px; width: 100%; object-fit: contain;">';
+                    postHtml += '</div>';
+                } else {
+                    postHtml += '<div class="row g-2 mb-3">';
+                    post.imageUrls.forEach(function(imageUrl, index) {
+                        postHtml += '<div class="col-md-6">';
+                        postHtml += '<div class="post-image-container">';
+                        postHtml += '<img src="' + imageUrl + '" class="img-fluid rounded" alt="Post image" style="width: 100%; aspect-ratio: 1; object-fit: cover;">';
+                        postHtml += '</div>';
+                        postHtml += '</div>';
+                    });
+                    postHtml += '</div>';
+                }
             }
             postHtml += '</a>';
             postHtml += '<div class="d-flex justify-content-between text-muted small mb-2">';
@@ -284,6 +314,9 @@
             postHtml += '</button>';
             postHtml += '<button class="btn btn-light flex-fill ms-1" id="commentBtn-' + post.id + '" onclick="focusComment(' + post.id + ')">';
             postHtml += '<i class="fas fa-comment"></i> Bình luận';
+            postHtml += '</button>';
+            postHtml += '<button class="btn btn-light flex-fill ms-1 ' + favoriteButtonClass + '" id="favoriteBtn-' + post.id + '" onclick="toggleFavorite(' + post.id + ')">';
+            postHtml += '<i class="fas ' + favoriteIconClass + '"></i> Yêu thích';
             postHtml += '</button>';
             postHtml += '</div>';
             postHtml += '<hr>';
@@ -374,7 +407,7 @@
         // Hàm focus vào ô comment
         function focusComment(postId) {
             loadComments(postId);
-            $('#commentInput-' + postId).focus();
+            $('#commentInput-' + post.id).focus();
         }
         
         // Hàm tải bình luận
@@ -733,5 +766,47 @@
                 }
             });
         }
+
+        // Hàm yêu thích/bỏ yêu thích bài viết
+        function toggleFavorite(postId) {
+            $.ajax({
+                url: '/FavoritePost/ToggleFavorite',
+                type: 'POST',
+                data: { postId: postId },
+                headers: {
+                    'RequestVerificationToken': $('input:hidden[name="__RequestVerificationToken"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        var favoriteBtn = $('#favoriteBtn-' + postId);
+                        if (data.action === 'added') {
+                            favoriteBtn.addClass('text-danger');
+                        } else {
+                            favoriteBtn.removeClass('text-danger');
+                        }
+                    } else {
+                        console.error('Error toggling favorite:', data.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('Error toggling favorite:', error);
+                }
+            });
+        }
     </script>
 }
+
+<style>
+    .post-image-container {
+        position: relative;
+        width: 100%;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .post-image-container img {
+        display: block;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+</style>

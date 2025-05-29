@@ -52,9 +52,23 @@
 
     <div class="card-body">
         <p class="card-text">@Model.Content</p>
-        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        @if (Model.ImageUrls != null && Model.ImageUrls.Any())
         {
-            <img src="@Model.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
+            if (Model.ImageUrls.Count == 1)
+            {
+                <img src="@Model.ImageUrls[0]" class="img-fluid rounded mb-3" alt="Post image">
+            }
+            else
+            {
+                <div class="row g-2 mb-3">
+                    @foreach (var imageUrl in Model.ImageUrls)
+                    {
+                        <div class="col-@(Model.ImageUrls.Count == 2 ? "6" : "4")">
+                            <img src="@imageUrl" class="img-fluid rounded" alt="Post image" style="width: 100%; height: 200px; object-fit: cover;">
+                        </div>
+                    }
+                </div>
+            }
         }
 
         <div class="d-flex justify-content-between text-muted small mb-2">

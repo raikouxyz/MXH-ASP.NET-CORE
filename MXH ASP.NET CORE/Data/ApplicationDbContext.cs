@@ -19,6 +19,8 @@ namespace MXH_ASP.NET_CORE.Data
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<FavoritePost> FavoritePosts { get; set; }
+        public DbSet<PostImage> PostImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,6 +99,32 @@ namespace MXH_ASP.NET_CORE.Data
             modelBuilder.Entity<Like>()
                 .HasIndex(l => new { l.UserId, l.PostId })
                 .IsUnique();
+
+            // Cấu hình mối quan hệ FavoritePost - User
+            modelBuilder.Entity<FavoritePost>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Cấu hình mối quan hệ FavoritePost - Post
+            modelBuilder.Entity<FavoritePost>()
+                .HasOne(f => f.Post)
+                .WithMany()
+                .HasForeignKey(f => f.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Cấu hình unique index cho FavoritePost
+            modelBuilder.Entity<FavoritePost>()
+                .HasIndex(f => new { f.UserId, f.PostId })
+                .IsUnique();
+
+            // Cấu hình mối quan hệ PostImage - Post
+            modelBuilder.Entity<PostImage>()
+                .HasOne(pi => pi.Post)
+                .WithMany(p => p.Images)
+                .HasForeignKey(pi => pi.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

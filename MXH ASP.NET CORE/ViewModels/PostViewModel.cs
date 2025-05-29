@@ -14,7 +14,7 @@ namespace MXH_ASP.NET_CORE.ViewModels
         public string Content { get; set; }
 
         [Display(Name = "Hình ảnh")]
-        public IFormFile? ImageFile { get; set; }
+        public List<IFormFile>? ImageFiles { get; set; }
     }
 
     /// <summary>
@@ -24,7 +24,7 @@ namespace MXH_ASP.NET_CORE.ViewModels
     {
         public int Id { get; set; }
         public string Content { get; set; }
-        public string ImageUrl { get; set; }
+        public List<string> ImageUrls { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         
@@ -44,6 +44,14 @@ namespace MXH_ASP.NET_CORE.ViewModels
 
         // Cờ đánh dấu người dùng hiện tại đã thích bài viết này chưa
         public bool IsLiked { get; set; }
+
+        // Thêm trường mới
+        public bool IsFavorite { get; set; }
+
+        public PostViewModel()
+        {
+            ImageUrls = new List<string>();
+        }
     }
     
     /// <summary>
@@ -57,5 +65,16 @@ namespace MXH_ASP.NET_CORE.ViewModels
         [StringLength(5000, ErrorMessage = "Nội dung tối đa 5000 ký tự")]
         [Display(Name = "Nội dung")]
         public string Content { get; set; }
+
+        [Display(Name = "Hình ảnh mới")]
+        public List<IFormFile>? NewImageFiles { get; set; }
+
+        [Display(Name = "Hình ảnh hiện tại")]
+        public List<string> ExistingImageUrls { get; set; }
+
+        public EditPostViewModel()
+        {
+            ExistingImageUrls = new List<string>();
+        }
     }
 } 

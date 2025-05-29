@@ -1,0 +1,129 @@
+@model IEnumerable<MXH_ASP.NET_CORE.Models.Post>
+
+@{
+    ViewData["Title"] = "Bài viết yêu thích";
+}
+
+<div class="container mt-4">
+    <h2>Bài viết yêu thích</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            Bạn chưa có bài viết yêu thích nào.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var post in Model)
+            {
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <a href="/Post/Detail/@post.Id" class="text-decoration-none text-dark">
+                            @if (post.Images != null && post.Images.Any())
+                            {
+                                <div class="post-image-container">
+                                    <img src="@post.Images.First().ImageUrl" class="card-img-top" alt="Post image" style="height: 300px; object-fit: cover;">
+                                </div>
+                            }
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">
+                                    @if (post.User != null)
+                                    {
+                                        <a href="/Profile/Index/@post.User.Id" class="text-dark text-decoration-none">
+                                            @post.User.FullName
+                                        </a>
+                                    }
+                                </h5>
+                                <p class="card-text flex-grow-1">@post.Content</p>
+                                <div class="mt-auto">
+                                    <p class="card-text">
+                                        <small class="text-muted">Đăng lúc: @post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="me-3">
+                                                <i class="fas fa-heart"></i> @(post.Likes?.Count ?? 0)
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-comment"></i> @(post.Comments?.Count ?? 0)
+                                            </span>
+                                        </div>
+                                        <button class="btn btn-outline-danger btn-sm remove-favorite" data-post-id="@post.Id" onclick="event.preventDefault(); event.stopPropagation();">
+                                            <i class="fas fa-heart-broken"></i> Bỏ yêu thích
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .post-image-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+    }
+    .post-image-container img {
+        width: 100%;
+        transition: transform 0.3s ease;
+    }
+    .post-image-container:hover img {
+        transform: scale(1.05);
+    }
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+    }
+    .remove-favorite {
+        z-index: 2;
+    }
+    .remove-favorite:hover {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.remove-favorite').click(function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var postId = $(this).data('post-id');
+                var button = $(this);
+
+                $.ajax({
+                    url: '/FavoritePost/ToggleFavorite',
+                    type: 'POST',
+                    data: { postId: postId },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            button.closest('.col-md-6').fadeOut();
+                        } else {
+                            alert('Có lỗi xảy ra khi bỏ yêu thích bài viết.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        alert('Có lỗi xảy ra khi bỏ yêu thích bài viết.');
+                    }
+                });
+            });
+        });
+    </script>
+} 

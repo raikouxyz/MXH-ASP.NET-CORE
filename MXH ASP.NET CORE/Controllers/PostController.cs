@@ -49,8 +49,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                         CreatedAt = DateTime.UtcNow
                     };
 
-                    // Xử lý upload ảnh nếu có
-                    if (model.ImageFile != null && model.ImageFile.Length > 0)
+                    // Xử lý upload nhiều ảnh nếu có
+                    if (model.ImageFiles != null && model.ImageFiles.Any())
                     {
                         // Tạo thư mục nếu chưa tồn tại
                         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "posts");
@@ -59,18 +59,30 @@ namespace MXH_ASP.NET_CORE.Controllers
                             Directory.CreateDirectory(uploadsFolder);
                         }
 
-                        // Tạo tên file duy nhất
-                        var uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ImageFile.FileName;
-                        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                        // Lưu file
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        // Xử lý từng ảnh
+                        for (int i = 0; i < model.ImageFiles.Count; i++)
                         {
-                            await model.ImageFile.CopyToAsync(fileStream);
-                        }
+                            var imageFile = model.ImageFiles[i];
+                            if (imageFile.Length > 0)
+                            {
+                                // Tạo tên file duy nhất
+                                var uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                        // Lưu đường dẫn tương đối vào database
-                        post.ImageUrl = "/uploads/posts/" + uniqueFileName;
+                                // Lưu file
+                                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                                {
+                                    await imageFile.CopyToAsync(fileStream);
+                                }
+
+                                // Thêm ảnh vào bài viết
+                                post.Images.Add(new PostImage
+                                {
+                                    ImageUrl = "/uploads/posts/" + uniqueFileName,
+                                    Order = i
+                                });
+                            }
+                        }
                     }
 
                     _context.Posts.Add(post);
@@ -270,6 +282,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     .Include(p => p.User)
                     .Include(p => p.Comments)
                     .Include(p => p.Likes)
+                    .Include(p => p.Images)
                     .OrderByDescending(p => p.CreatedAt)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -277,7 +290,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     {
                         Id = p.Id,
                         Content = p.Content,
-                        ImageUrl = p.ImageUrl,
+                        ImageUrls = p.Images.OrderBy<PostImage, int>(i => i.Order).Select(i => i.ImageUrl).ToList(),
                         CreatedAt = p.CreatedAt,
                         UpdatedAt = p.UpdatedAt,
                         UserId = p.UserId,
@@ -288,7 +301,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                         LikeCount = p.Likes.Count,
                         CanEdit = currentUserId.HasValue && p.UserId == currentUserId.Value,
                         CanDelete = currentUserId.HasValue && p.UserId == currentUserId.Value,
-                        IsLiked = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value)
+                        IsLiked = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value),
+                        IsFavorite = currentUserId.HasValue && _context.FavoritePosts.Any(f => f.UserId == currentUserId.Value && f.PostId == p.Id)
                     })
                     .ToListAsync();
 
@@ -331,7 +345,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     {
                         Id = p.Id,
                         Content = p.Content,
-                        ImageUrl = p.ImageUrl,
+                        ImageUrls = p.Images.OrderBy<PostImage, int>(i => i.Order).Select(i => i.ImageUrl).ToList(),
                         CreatedAt = p.CreatedAt,
                         UpdatedAt = p.UpdatedAt,
                         UserId = p.UserId,
@@ -342,7 +356,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                         LikeCount = p.Likes.Count,
                         CanEdit = currentUserId.HasValue && p.UserId == currentUserId.Value,
                         CanDelete = currentUserId.HasValue && p.UserId == currentUserId.Value,
-                        IsLiked = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value)
+                        IsLiked = currentUserId.HasValue && p.Likes.Any(l => l.UserId == currentUserId.Value),
+                        IsFavorite = currentUserId.HasValue && _context.FavoritePosts.Any(f => f.UserId == currentUserId.Value && f.PostId == p.Id)
                     })
                     .ToListAsync();
 
@@ -379,6 +394,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     .Include(p => p.User)
                     .Include(p => p.Comments)
                     .Include(p => p.Likes)
+                    .Include(p => p.Images)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (post == null)
@@ -390,7 +406,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                 {
                     Id = post.Id,
                     Content = post.Content,
-                    ImageUrl = post.ImageUrl,
+                    ImageUrls = post.Images.OrderBy<PostImage, int>(i => i.Order).Select(i => i.ImageUrl).ToList(),
                     CreatedAt = post.CreatedAt,
                     UpdatedAt = post.UpdatedAt,
                     UserId = post.UserId,
@@ -401,7 +417,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                     LikeCount = post.Likes.Count,
                     CanEdit = currentUserId.HasValue && post.UserId == currentUserId.Value,
                     CanDelete = currentUserId.HasValue && post.UserId == currentUserId.Value,
-                    IsLiked = currentUserId.HasValue && post.Likes.Any(l => l.UserId == currentUserId.Value)
+                    IsLiked = currentUserId.HasValue && post.Likes.Any(l => l.UserId == currentUserId.Value),
+                    IsFavorite = currentUserId.HasValue && _context.FavoritePosts.Any(f => f.UserId == currentUserId.Value && f.PostId == post.Id)
                 };
 
                 return View(postViewModel);

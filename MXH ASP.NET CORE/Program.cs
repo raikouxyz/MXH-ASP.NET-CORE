@@ -29,6 +29,9 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Đăng ký dịch vụ SMS
 builder.Services.AddScoped<ISmsSender, SmsSender>();
 
+// Đăng ký các dịch vụ
+builder.Services.AddScoped<IFavoritePostService, FavoritePostService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

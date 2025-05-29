@@ -3,6 +3,7 @@
 <div class="card shadow-sm mb-4">
     <div class="card-body">
         <form asp-controller="Post" asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
             <div class="d-flex mb-3">
                 @{
                     var imagePath = string.IsNullOrEmpty(ViewBag.CurrentUserAvatar as string) 
@@ -20,11 +21,8 @@
             
             <!-- Preview ảnh -->
             <div id="imagePreview" class="mb-3" style="display: none;">
-                <div class="position-relative d-inline-block">
-                    <img id="previewImg" src="#" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
-                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2" onclick="removeImage()">
-                        <i class="fas fa-times"></i>
-                    </button>
+                <div class="row g-2" id="previewContainer">
+                    <!-- Ảnh preview sẽ được thêm vào đây -->
                 </div>
             </div>
             
@@ -35,7 +33,7 @@
                     <label for="imageInput" class="btn btn-light rounded-circle" title="Thêm ảnh">
                         <i class="fas fa-image"></i>
                     </label>
-                    <input type="file" id="imageInput" name="ImageFile" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                    <input type="file" id="imageInput" name="ImageFiles" accept="image/*" style="display: none;" multiple onchange="previewImages(this)">
                     <button type="button" class="btn btn-light rounded-circle" title="Thêm emoji" id="emojiButton">
                         <i class="fas fa-smile"></i>
                     </button>
@@ -126,6 +124,49 @@
         font-size: 0.9rem;
         padding-left: 5px;
     }
+    .preview-image {
+        position: relative;
+        margin-bottom: 0;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        aspect-ratio: 1;
+    }
+    .preview-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    .preview-image:hover img {
+        transform: scale(1.05);
+    }
+    .remove-image {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1;
+    }
+    .remove-image:hover {
+        background: #fff;
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .remove-image i {
+        color: #dc3545;
+        font-size: 14px;
+    }
 </style>
 
 <script>
@@ -133,23 +174,52 @@
     const emojiButton = document.getElementById('emojiButton');
     const emojiPicker = document.getElementById('emojiPicker');
 
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
+    function previewImages(input) {
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        previewContainer.innerHTML = '';
+        
+        if (input.files.length > 0) {
+            imagePreview.style.display = 'block';
             
-            reader.onload = function(e) {
-                $('#previewImg').attr('src', e.target.result);
-                $('#imagePreview').show();
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+                        
+                        const previewDiv = document.createElement('div');
+                        previewDiv.className = 'preview-image';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'Preview';
+                        img.loading = 'lazy';
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'remove-image';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.onclick = function() {
+                            col.remove();
+                            if (previewContainer.children.length === 0) {
+                                imagePreview.style.display = 'none';
+                            }
+                        };
+                        
+                        previewDiv.appendChild(img);
+                        previewDiv.appendChild(removeBtn);
+                        col.appendChild(previewDiv);
+                        previewContainer.appendChild(col);
+                    };
+                    reader.readAsDataURL(file);
+                }
             }
-            
-            reader.readAsDataURL(input.files[0]);
+        } else {
+            imagePreview.style.display = 'none';
         }
-    }
-    
-    function removeImage() {
-        $('#imageInput').val('');
-        $('#imagePreview').hide();
-        $('#previewImg').attr('src', '#');
     }
 
     // Xử lý sự kiện click cho nút emoji

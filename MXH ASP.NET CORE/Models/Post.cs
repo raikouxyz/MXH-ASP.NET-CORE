@@ -15,9 +15,7 @@ namespace MXH_ASP.NET_CORE.Models
         [MaxLength(5000)]
         public string Content { get; set; }
 
-        public string? ImageUrl { get; set; }
-
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
         public DateTime? UpdatedAt { get; set; }
 
@@ -27,15 +25,16 @@ namespace MXH_ASP.NET_CORE.Models
 
         // Navigation properties
         [ForeignKey("UserId")]
-        public User User { get; set; }
-        public ICollection<Comment> Comments { get; set; }
-        public ICollection<Like> Likes { get; set; }
+        public virtual User User { get; set; }
+        public virtual ICollection<Comment> Comments { get; set; }
+        public virtual ICollection<Like> Likes { get; set; }
+        public virtual ICollection<PostImage> Images { get; set; }
 
         public Post()
         {
             Comments = new List<Comment>();
             Likes = new List<Like>();
-            CreatedAt = DateTime.UtcNow;
+            Images = new List<PostImage>();
         }
     }
 } 

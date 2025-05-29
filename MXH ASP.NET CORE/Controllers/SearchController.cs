@@ -133,12 +133,13 @@ namespace MXH_ASP.NET_CORE.Controllers
                 // Lấy danh sách bài viết và thực hiện tìm kiếm trên bộ nhớ
                 var posts = await _context.Posts
                     .Include(p => p.User)
+                    .Include(p => p.Images)
                     .OrderByDescending(p => p.CreatedAt)
                     .Select(p => new
                     {
                         p.Id,
                         p.Content,
-                        p.ImageUrl,
+                        ImageUrls = p.Images.OrderBy(i => i.Order).Select(i => i.ImageUrl).ToList(),
                         p.CreatedAt,
                         p.UpdatedAt,
                         UserId = p.User.Id,
