@@ -3,6 +3,8 @@
     var query = Context.Request.Query["query"].ToString();
 }
 
+@Html.AntiForgeryToken()
+
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -73,7 +75,57 @@
                             } else {
                                 let html = '';
                                 response.users.forEach(function(user) {
-                                    html += '<a href="/Profile/Index/' + user.id + '" class="list-group-item list-group-item-action">' +
+                                    // Kiểm tra trạng thái kết bạn
+                                    let friendshipStatus = null;
+                                    let isRequester = false;
+                                    if (response.friendships) {
+                                        const friendship = response.friendships.find(f => f.friendId === user.id);
+                                        if (friendship) {
+                                            friendshipStatus = friendship.status;
+                                            isRequester = friendship.isRequester;
+                                        }
+                                    }
+
+                                    // Tạo nút kết bạn dựa trên trạng thái
+                                    let friendButton = '';
+                                    if (friendshipStatus === null) {
+                                        friendButton = '<form action="/Friend/SendRequest" method="post" class="d-inline">' +
+                                                     '<input type="hidden" name="userId" value="' + user.id + '" />' +
+                                                     '<input type="hidden" name="returnUrl" value="/Search/Index?query=' + encodeURIComponent(query) + '" />' +
+                                                     '@Html.AntiForgeryToken()' +
+                                                     '<button type="submit" class="btn btn-primary btn-sm">' +
+                                                     '<i class="fas fa-user-plus me-1"></i>Kết bạn</button>' +
+                                                     '</form>';
+                                    } else if (friendshipStatus === 0) { // Pending
+                                        if (isRequester) {
+                                            friendButton = '<button class="btn btn-secondary btn-sm" disabled>' +
+                                                         '<i class="fas fa-clock me-1"></i>Đã gửi lời mời</button>';
+                                        } else {
+                                            friendButton = '<div class="d-flex gap-2">' +
+                                                         '<form action="/Friend/AcceptRequest" method="post" class="d-inline flex-grow-1">' +
+                                                         '<input type="hidden" name="friendshipId" value="' + friendship.friendshipId + '" />' +
+                                                         '<input type="hidden" name="returnUrl" value="/Search/Index?query=' + encodeURIComponent(query) + '" />' +
+                                                         '@Html.AntiForgeryToken()' +
+                                                         '<button type="submit" class="btn btn-success btn-sm w-100">' +
+                                                         '<i class="fas fa-check me-1"></i>Chấp nhận</button>' +
+                                                         '</form>' +
+                                                         '<form action="/Friend/RejectRequest" method="post" class="d-inline flex-grow-1">' +
+                                                         '<input type="hidden" name="friendshipId" value="' + friendship.friendshipId + '" />' +
+                                                         '<input type="hidden" name="returnUrl" value="/Search/Index?query=' + encodeURIComponent(query) + '" />' +
+                                                         '@Html.AntiForgeryToken()' +
+                                                         '<button type="submit" class="btn btn-danger btn-sm w-100">' +
+                                                         '<i class="fas fa-times me-1"></i>Từ chối</button>' +
+                                                         '</form>' +
+                                                         '</div>';
+                                        }
+                                    } else if (friendshipStatus === 1) { // Accepted
+                                        friendButton = '<button class="btn btn-success btn-sm" disabled>' +
+                                                     '<i class="fas fa-check me-1"></i>Bạn bè</button>';
+                                    }
+
+                                    html += '<div class="list-group-item">' +
+                                           '<div class="d-flex align-items-center justify-content-between">' +
+                                           '<a href="/Profile/Index/' + user.id + '" class="text-decoration-none text-dark flex-grow-1">' +
                                            '<div class="d-flex align-items-center">' +
                                            '<img src="' + (user.profilePicture || '/uploads/avatars/default-avatar.svg') + '" ' +
                                            'class="rounded-circle me-3" ' +
@@ -83,7 +135,10 @@
                                            '<small class="text-muted">' + user.username + '</small>' +
                                            '</div>' +
                                            '</div>' +
-                                           '</a>';
+                                           '</a>' +
+                                           friendButton +
+                                           '</div>' +
+                                           '</div>';
                                 });
                                 usersResults.html(html);
                             }

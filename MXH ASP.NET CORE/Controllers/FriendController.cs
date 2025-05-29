@@ -146,7 +146,7 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendRequest(int userId)
+        public async Task<IActionResult> SendRequest(int userId, string returnUrl = null)
         {
             try
             {
@@ -215,6 +215,11 @@ namespace MXH_ASP.NET_CORE.Controllers
 
                 _logger.LogInformation($"Friend request sent from {currentUserId} to {userId}");
                 TempData["SuccessMessage"] = "Đã gửi lời mời kết bạn thành công.";
+                
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -230,7 +235,7 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AcceptRequest(int friendshipId)
+        public async Task<IActionResult> AcceptRequest(int friendshipId, string returnUrl = null)
         {
             try
             {
@@ -262,6 +267,11 @@ namespace MXH_ASP.NET_CORE.Controllers
 
                 _logger.LogInformation($"Friend request from {friendship.RequesterId} to {userId} accepted");
                 TempData["SuccessMessage"] = $"Bạn đã trở thành bạn bè với {friendship.Requester.FullName}.";
+                
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
                 return RedirectToAction("Index");
             }
             catch (Exception ex)
@@ -277,7 +287,7 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectRequest(int friendshipId)
+        public async Task<IActionResult> RejectRequest(int friendshipId, string returnUrl = null)
         {
             try
             {
@@ -306,6 +316,11 @@ namespace MXH_ASP.NET_CORE.Controllers
 
                 _logger.LogInformation($"Friend request from {friendship.RequesterId} to {userId} rejected");
                 TempData["SuccessMessage"] = "Đã từ chối lời mời kết bạn.";
+                
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
                 return RedirectToAction("Index");
             }
             catch (Exception ex)

@@ -54,6 +54,10 @@ namespace MXH_ASP.NET_CORE.Controllers
                     return Json(new { success = false, message = "Vui lòng nhập từ khóa tìm kiếm" });
                 }
 
+                // Lấy ID người dùng hiện tại
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                int? currentUserIdInt = currentUserId != null ? int.Parse(currentUserId) : null;
+
                 // Chuyển đổi query thành chữ thường
                 string lowerQuery = query.ToLower();
                 // Chuyển đổi query thành không dấu
@@ -78,7 +82,27 @@ namespace MXH_ASP.NET_CORE.Controllers
                     .Take(10)
                     .ToList();
 
-                return Json(new { success = true, users = filteredUsers });
+                // Lấy thông tin về trạng thái kết bạn
+                var friendships = new List<object>();
+                if (currentUserIdInt.HasValue)
+                {
+                    friendships = await _context.Friendships
+                        .Where(f => (f.RequesterId == currentUserIdInt.Value || f.AddresseeId == currentUserIdInt.Value) &&
+                                   filteredUsers.Select(u => u.Id).Contains(f.RequesterId == currentUserIdInt.Value ? f.AddresseeId : f.RequesterId))
+                        .Select(f => new
+                        {
+                            FriendId = f.RequesterId == currentUserIdInt.Value ? f.AddresseeId : f.RequesterId,
+                            Status = f.Status,
+                            IsRequester = f.RequesterId == currentUserIdInt.Value
+                        })
+                        .ToListAsync<object>();
+                }
+
+                return Json(new { 
+                    success = true, 
+                    users = filteredUsers,
+                    friendships = friendships
+                });
             }
             catch (Exception ex)
             {
