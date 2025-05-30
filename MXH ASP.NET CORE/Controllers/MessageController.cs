@@ -77,6 +77,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     {
                         m.Id,
                         m.Content,
+                        m.ImageUrl,
                         m.CreatedAt,
                         m.IsRead,
                         IsSender = m.SenderId == currentUserId
@@ -185,6 +186,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     {
                         m.Id,
                         m.Content,
+                        m.ImageUrl,
                         m.CreatedAt,
                         m.IsRead,
                         IsSender = m.SenderId == currentUserId
@@ -299,6 +301,93 @@ namespace MXH_ASP.NET_CORE.Controllers
             {
                 _logger.LogError(ex, "Lỗi khi kiểm tra số lượng tin nhắn mới");
                 return Json(new { success = false, message = "Có lỗi xảy ra khi kiểm tra tin nhắn mới" });
+            }
+        }
+
+        // Thêm action mới để xử lý upload hình ảnh
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendImage(int receiverId, IFormFile image)
+        {
+            try
+            {
+                if (image == null || image.Length == 0)
+                {
+                    return Json(new { success = false, message = "Vui lòng chọn hình ảnh" });
+                }
+
+                // Kiểm tra định dạng file
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+                var fileExtension = Path.GetExtension(image.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    return Json(new { success = false, message = "Định dạng file không được hỗ trợ" });
+                }
+
+                // Kiểm tra kích thước file (giới hạn 5MB)
+                if (image.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "Kích thước file không được vượt quá 5MB" });
+                }
+
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+
+                // Kiểm tra tình trạng bạn bè
+                var friendship = await _context.Friendships
+                    .FirstOrDefaultAsync(f => 
+                        (f.RequesterId == currentUserId && f.AddresseeId == receiverId) ||
+                        (f.RequesterId == receiverId && f.AddresseeId == currentUserId));
+
+                if (friendship == null || friendship.Status != FriendshipStatus.Accepted)
+                {
+                    return Json(new { success = false, message = "Bạn không thể nhắn tin với người này" });
+                }
+
+                // Tạo thư mục nếu chưa tồn tại
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "messages");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Tạo tên file duy nhất
+                var uniqueFileName = $"{Guid.NewGuid()}{fileExtension}";
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Lưu file
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(fileStream);
+                }
+
+                // Tạo tin nhắn mới với hình ảnh
+                var message = new Message
+                {
+                    SenderId = currentUserId,
+                    ReceiverId = receiverId,
+                    Content = "", // Để trống vì đây là tin nhắn hình ảnh
+                    ImageUrl = "/uploads/messages/" + uniqueFileName,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Messages.Add(message);
+                await _context.SaveChangesAsync();
+
+                return Json(new { 
+                    success = true, 
+                    message = new {
+                        id = message.Id,
+                        content = message.Content,
+                        imageUrl = message.ImageUrl,
+                        createdAt = message.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
+                        isSender = true
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi gửi hình ảnh");
+                return Json(new { success = false, message = "Có lỗi xảy ra khi gửi hình ảnh" });
             }
         }
     }

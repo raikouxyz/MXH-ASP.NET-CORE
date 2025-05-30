@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewData["Title"] = $"Chat với {ViewBag.Receiver.FullName}";
     var receiver = ViewBag.Receiver;
     var messages = ViewBag.Messages;
@@ -26,7 +26,14 @@
                         <div class="message-wrapper @(message.IsSender ? "message-sent" : "message-received")">
                             <div class="message">
                                 <div class="message-content">
-                                    @message.Content
+                                    @if (!string.IsNullOrEmpty(message.ImageUrl))
+                                    {
+                                        <img src="@message.ImageUrl" class="message-image" onclick="openImageModal(this.src)" alt="Hình ảnh tin nhắn">
+                                    }
+                                    @if (!string.IsNullOrEmpty(message.Content))
+                                    {
+                                        <div>@message.Content</div>
+                                    }
                                 </div>
                                 <div class="message-time">
                                     @message.CreatedAt.ToString("HH:mm")
@@ -46,7 +53,12 @@
                             <button type="button" class="btn btn-outline-secondary" id="emojiButton">
                                 <i class="far fa-smile"></i>
                             </button>
+                            <button type="button" class="btn btn-outline-secondary" id="imageButton">
+                                <i class="far fa-image"></i>
+                            </button>
+                            <input type="file" id="imageInput" accept="image/*" style="display: none;" />
                         </div>
+                        <div id="emojiPickerWrapper" style="position: relative;"></div>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-paper-plane"></i>
                         </button>
@@ -57,14 +69,33 @@
     </div>
 </div>
 
+<!-- Thêm modal preview hình ảnh -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xem trước hình ảnh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="previewImage" class="img-fluid rounded" style="max-height: 400px;" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="sendImageBtn">Gửi</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Styles {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.1/index.css" />
     <style>
         .chat-messages {
-            height: 500px;
+            height: 600px;
             overflow-y: auto;
             padding: 1rem;
-            background-color: #f8f9fa;
+            background: linear-gradient(to bottom, #f8f9fa, #ffffff);
         }
 
         .message-wrapper {
@@ -85,38 +116,80 @@
             border-radius: 1rem;
             position: relative;
             word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
 
         .message-sent .message-content {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #007bff, #0056b3);
             color: white;
             border-bottom-right-radius: 0.25rem;
         }
 
         .message-received .message-content {
-            background-color: white;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
             border: 1px solid #dee2e6;
             border-bottom-left-radius: 0.25rem;
         }
 
         .message-time {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #6c757d;
             margin-top: 0.25rem;
             text-align: right;
+            opacity: 0.8;
         }
 
-        emoji-picker {
+        /* Style cho emoji picker */
+        .emoji-picker-container {
+            display: none;
             position: absolute;
             bottom: 100%;
             right: 0;
             z-index: 1000;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .emoji-picker-container.show {
+            display: block;
+        }
+
+        emoji-picker {
+            --background: #ffffff;
+            --border-color: #dee2e6;
+            --button-active-background: #e9ecef;
+            --button-hover-background: #f8f9fa;
+            --category-emoji-padding: 0.5rem;
+            --category-emoji-size: 1.5rem;
+            --category-font-color: #6c757d;
+            --category-font-size: 0.8rem;
+            --indicator-color: #007bff;
+            --num-columns: 8;
+            --outline-color: #007bff;
+            --outline-size: 1px;
+            --padding: 0.5rem;
+            --preview-emoji-size: 2rem;
+            --preview-font-color: #212529;
+            --preview-font-size: 0.9rem;
+            --results-font-color: #212529;
+            --results-font-size: 0.9rem;
+            --search-background: #f8f9fa;
+            --search-border-color: #dee2e6;
+            --search-font-color: #212529;
+            --search-font-size: 0.9rem;
+            --search-icon-color: #6c757d;
+            --search-placeholder-color: #adb5bd;
         }
 
         #messageInput {
             border-radius: 1.5rem;
             padding-left: 1rem;
             padding-right: 1rem;
+            border: none;
+            padding: 0.8rem 1.2rem;
         }
 
         #emojiButton {
@@ -128,6 +201,132 @@
             border-radius: 1.5rem;
             padding-left: 1.5rem;
             padding-right: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .message-image {
+            max-width: 300px;
+            max-height: 300px;
+            border-radius: 1rem;
+            cursor: pointer;
+        }
+
+        .message-image:hover {
+            opacity: 0.9;
+        }
+
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .image-modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Style cho input area */
+        .card-footer {
+            border-top: 1px solid rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+        }
+
+        .input-group {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        #messageInput:focus {
+            box-shadow: none;
+        }
+
+        .btn-outline-secondary {
+            border: none;
+            padding: 0.8rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fa;
+            color: #007bff;
+        }
+
+        /* Style cho preview image */
+        .preview-image-container {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+        }
+
+        .preview-image-remove {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Loading indicator */
+        .loading-indicator {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 }
@@ -146,29 +345,144 @@
             // Cuộn xuống tin nhắn mới nhất
             messageContainer.scrollTop(messageContainer[0].scrollHeight);
 
-            // Khởi tạo emoji picker
+            // Thêm xử lý cho emoji nhanh
+            $('.emoji-btn').click(function() {
+                const emoji = $(this).data('emoji');
+                const currentValue = messageInput.val();
+                const cursorPos = messageInput[0].selectionStart;
+                const newValue = currentValue.substring(0, cursorPos) + 
+                               emoji + 
+                               currentValue.substring(cursorPos);
+                messageInput.val(newValue);
+                
+                // Đặt con trỏ sau emoji vừa thêm
+                const newCursorPos = cursorPos + emoji.length;
+                messageInput[0].setSelectionRange(newCursorPos, newCursorPos);
+                messageInput.focus();
+            });
+
+            // Cập nhật phần xử lý emoji picker
             $('#emojiButton').click(function(e) {
                 e.preventDefault();
-                if (emojiPicker) {
-                    emojiPicker.remove();
+                e.stopPropagation();
+
+                // Nếu đã có picker thì ẩn đi
+                if ($('#emojiPickerWrapper').children().length > 0) {
+                    $('#emojiPickerWrapper').empty();
                     emojiPicker = null;
                     return;
                 }
 
+                // Xóa các picker cũ (nếu có)
+                $('#emojiPickerWrapper').empty();
+
+                // Tạo emoji picker mới
                 emojiPicker = document.createElement('emoji-picker');
-                emojiPicker.addEventListener('emoji-click', event => {
-                    messageInput.val(messageInput.val() + event.detail.unicode);
+                $('#emojiPickerWrapper').append(emojiPicker);
+
+                // Đặt vị trí tuyệt đối cho picker (nằm ngay trên input)
+                $('#emojiPickerWrapper').css({
+                    position: 'absolute',
+                    bottom: '60px', // Điều chỉnh cho phù hợp với giao diện của bạn
+                    right: '60px',  // Điều chỉnh cho phù hợp với giao diện của bạn
+                    zIndex: 2000
                 });
 
-                $(this).parent().append(emojiPicker);
+                // Sự kiện chọn emoji
+                emojiPicker.addEventListener('emoji-click', event => {
+                    const currentValue = messageInput.val();
+                    const cursorPos = messageInput[0].selectionStart;
+                    const newValue = currentValue.substring(0, cursorPos) +
+                        event.detail.unicode +
+                        currentValue.substring(cursorPos);
+                    messageInput.val(newValue);
+                    // Đặt con trỏ sau emoji vừa thêm
+                    const newCursorPos = cursorPos + event.detail.unicode.length;
+                    messageInput[0].setSelectionRange(newCursorPos, newCursorPos);
+                    messageInput.focus();
+                });
             });
 
-            // Đóng emoji picker khi click ra ngoài
+            // Đóng picker khi click ra ngoài
             $(document).on('click', function(e) {
-                if (emojiPicker && !$(e.target).closest('.input-group, emoji-picker').length) {
-                    emojiPicker.remove();
+                if (!$(e.target).closest('#emojiPickerWrapper, #emojiButton').length) {
+                    $('#emojiPickerWrapper').empty();
                     emojiPicker = null;
                 }
+            });
+
+            // Thêm xử lý cho nút chọn hình ảnh
+            $('#imageButton').click(function() {
+                $('#imageInput').click();
+            });
+
+            // Thêm biến để lưu file hình ảnh đang preview
+            let currentImageFile = null;
+
+            // Cập nhật xử lý khi chọn hình ảnh
+            $('#imageInput').change(function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Kiểm tra kích thước file
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Kích thước file không được vượt quá 5MB');
+                    return;
+                }
+
+                // Kiểm tra định dạng file
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Định dạng file không được hỗ trợ');
+                    return;
+                }
+
+                // Hiển thị preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#previewImage').attr('src', e.target.result);
+                    currentImageFile = file;
+                    $('#imagePreviewModal').modal('show');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            // Xử lý gửi hình ảnh từ modal preview
+            $('#sendImageBtn').click(function() {
+                if (!currentImageFile) return;
+
+                const formData = new FormData();
+                formData.append('receiverId', receiverId);
+                formData.append('image', currentImageFile);
+                formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+                // Hiển thị loading
+                $('.loading-indicator').show();
+
+                $.ajax({
+                    url: '/Message/SendImage',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            appendMessage(response.message);
+                            lastMessageId.val(response.message.id);
+                            $('#imagePreviewModal').modal('hide');
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi gửi hình ảnh');
+                    },
+                    complete: function() {
+                        $('.loading-indicator').hide();
+                        currentImageFile = null;
+                        $('#imageInput').val('');
+                    }
+                });
             });
 
             // Gửi tin nhắn
@@ -218,11 +532,19 @@
 
             // Thêm tin nhắn vào container
             function appendMessage(message) {
+                let contentHtml = '';
+                if (message.imageUrl) {
+                    contentHtml = `<img src="${message.imageUrl}" class="message-image" onclick="openImageModal(this.src)" alt="Hình ảnh tin nhắn">`;
+                }
+                if (message.content) {
+                    contentHtml += `<div>${message.content}</div>`;
+                }
+
                 const messageHtml = `
                     <div class="message-wrapper ${message.isSender ? 'message-sent' : 'message-received'}">
                         <div class="message">
                             <div class="message-content">
-                                ${message.content}
+                                ${contentHtml}
                             </div>
                             <div class="message-time">
                                 ${message.createdAt}
@@ -230,12 +552,99 @@
                         </div>
                     </div>
                 `;
-                messageContainer.append(messageHtml);
+                
+                // Thêm hiệu ứng fade in
+                const $message = $(messageHtml).hide();
+                messageContainer.append($message);
+                $message.fadeIn(300);
                 messageContainer.scrollTop(messageContainer[0].scrollHeight);
             }
 
             // Kiểm tra tin nhắn mới mỗi 3 giây
             setInterval(checkNewMessages, 3000);
+
+            // Thêm modal xem ảnh
+            $('body').append(`
+                <div id="imageModal" class="image-modal">
+                    <span class="image-modal-close">&times;</span>
+                    <img class="image-modal-content" id="modalImage">
+                </div>
+            `);
+
+            // Xử lý đóng modal
+            $('.image-modal-close').click(function() {
+                $('#imageModal').hide();
+            });
+
+            // Đóng modal khi click bên ngoài
+            $(window).click(function(e) {
+                if ($(e.target).is('#imageModal')) {
+                    $('#imageModal').hide();
+                }
+            });
+
+            // Thêm loading indicator vào DOM
+            $('body').append(`
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                </div>
+            `);
+
+            // Cập nhật style cho emoji picker
+            const style = document.createElement('style');
+            style.textContent = `
+                .emoji-picker-container {
+                    position: absolute;
+                    bottom: 100%;
+                    right: 0;
+                    z-index: 1000;
+                    margin-bottom: 10px;
+                    background: white;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    display: none;
+                }
+
+                .emoji-picker-container.show {
+                    display: block;
+                }
+
+                emoji-picker {
+                    --background: #ffffff;
+                    --border-color: #dee2e6;
+                    --button-active-background: #e9ecef;
+                    --button-hover-background: #f8f9fa;
+                    --category-emoji-padding: 0.5rem;
+                    --category-emoji-size: 1.5rem;
+                    --category-font-color: #6c757d;
+                    --category-font-size: 0.8rem;
+                    --indicator-color: #007bff;
+                    --num-columns: 8;
+                    --outline-color: #007bff;
+                    --outline-size: 1px;
+                    --padding: 0.5rem;
+                    --preview-emoji-size: 2rem;
+                    --preview-font-color: #212529;
+                    --preview-font-size: 0.9rem;
+                    --results-font-color: #212529;
+                    --results-font-size: 0.9rem;
+                    --search-background: #f8f9fa;
+                    --search-border-color: #dee2e6;
+                    --search-font-color: #212529;
+                    --search-font-size: 0.9rem;
+                    --search-icon-color: #6c757d;
+                    --search-placeholder-color: #adb5bd;
+                }
+            `;
+            document.head.appendChild(style);
         });
+
+        // Hàm mở modal xem ảnh
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = src;
+        }
     </script>
 } 
