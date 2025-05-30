@@ -340,9 +340,40 @@
             
             // Hiển thị loading
             $('#load-more-btn').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang tải...');
+            $('#load-more-btn').addClass('loading');
             
             // Tải bài viết mới
-            loadPosts();
+            $.ajax({
+                url: '@Url.Action("GetPosts", "Post")',
+                type: 'GET',
+                data: {
+                    page: currentPage,
+                    pageSize: pageSize
+                },
+                success: function(data) {
+                    $('#load-more-btn').removeClass('loading');
+                    // Ẩn loading spinner
+                    $('#loading-spinner').hide();
+                    
+                    if (data.length === 0) {
+                        hasMorePosts = false;
+                        updateLoadMoreButton();
+                    } else {
+                        data.forEach(function(post) {
+                            renderPost(post);
+                        });
+                        if (data.length < pageSize) {
+                            hasMorePosts = false;
+                        }
+                        updateLoadMoreButton();
+                    }
+                },
+                error: function(error) {
+                    $('#load-more-btn').removeClass('loading');
+                    $('#loading-spinner').hide();
+                    $('#posts-container').append('<div class="alert alert-danger">Không thể tải bài viết. Vui lòng thử lại sau.</div>');
+                }
+            });
         }
         
         // Cập nhật trạng thái nút tải thêm
@@ -783,6 +814,21 @@
                 }
             });
         }
+
+        // Lazy loading khi cuộn gần cuối trang
+        $(window).on('scroll', function() {
+            // Nếu đã hết bài viết thì không tải nữa
+            if (!hasMorePosts) return;
+
+            // Kiểm tra nếu đang ở gần cuối trang (cách bottom 200px)
+            if ($(window).scrollTop() + $(window).height() + 200 >= $(document).height()) {
+                // Đảm bảo không gọi loadMorePosts nhiều lần liên tục
+                if (!$('#load-more-btn').hasClass('loading')) {
+                    $('#load-more-btn').addClass('loading');
+                    loadMorePosts();
+                }
+            }
+        });
     </script>
 }
 
