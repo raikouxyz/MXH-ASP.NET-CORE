@@ -1,0 +1,91 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Trang quản trị";
+}
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4">Trang quản trị</h2>
+
+    <div class="row">
+        <!-- Thống kê người dùng -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số người dùng</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thống kê bài viết -->
+        <div class="col-xl-6 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng số bài viết</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@ViewBag.TotalPosts</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Các chức năng quản lý -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quản lý người dùng</h6>
+                </div>
+                <div class="card-body">
+                    <p>Quản lý thông tin người dùng, khóa/mở khóa tài khoản.</p>
+                    <a href="@Url.Action("Users", "Admin")" class="btn btn-primary">
+                        <i class="fas fa-users"></i> Xem danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Quản lý bài viết</h6>
+                </div>
+                <div class="card-body">
+                    <p>Quản lý bài viết, xóa bài viết vi phạm.</p>
+                    <a href="@Url.Action("Posts", "Admin")" class="btn btn-primary">
+                        <i class="fas fa-file-alt"></i> Xem danh sách
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Cập nhật thống kê mỗi 30 giây
+        setInterval(function() {
+            $.get('/Admin/GetStatistics', function(data) {
+                $('.total-users').text(data.totalUsers);
+                $('.total-posts').text(data.totalPosts);
+                $('.total-comments').text(data.totalComments);
+                $('.total-likes').text(data.totalLikes);
+            });
+        }, 30000);
+    </script>
+} 

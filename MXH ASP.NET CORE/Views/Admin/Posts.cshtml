@@ -1,0 +1,92 @@
+@model IEnumerable<dynamic>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý bài viết";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quản lý bài viết</h2>
+    </div>
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="postsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nội dung</th>
+                            <th>Ngày tạo</th>
+                            <th>Ngày cập nhật</th>
+                            <th>Người đăng</th>
+                            <th>Lượt thích</th>
+                            <th>Bình luận</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var post in Model)
+                        {
+                            <tr>
+                                <td>@post.Id</td>
+                                <td>@(post.Content.Length > 50 ? post.Content.Substring(0, 50) + "..." : post.Content)</td>
+                                <td>@post.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@post.UpdatedAt?.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@post.UserFullName (@post.UserName)</td>
+                                <td>@post.LikeCount</td>
+                                <td>@post.CommentCount</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="deletePost(@post.Id)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        var postsTable;
+        $(document).ready(function() {
+            // Khởi tạo lại DataTable, chỉ cho phép 10 dòng/trang, không cho chọn số dòng khác
+            postsTable = $('#postsTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json'
+                },
+                pageLength: 10, // Luôn hiển thị 10 dòng mỗi trang
+                lengthMenu: [[10], [10]], // Chỉ cho phép chọn 10
+                ordering: true,
+                searching: false,
+                responsive: true,
+                autoWidth: false
+            });
+        });
+
+        // Xóa bài viết
+        function deletePost(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                $.ajax({
+                    url: '/Admin/DeletePost/' + id,
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Lỗi: ' + error);
+                    }
+                });
+            }
+        }
+    </script>
+} 

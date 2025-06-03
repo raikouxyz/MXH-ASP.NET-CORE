@@ -384,7 +384,8 @@ namespace MXH_ASP.NET_CORE.Controllers
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim("FullName", user.FullName ?? string.Empty),
-                new Claim("ProfilePicture", user.ProfilePicture ?? string.Empty)
+                new Claim("ProfilePicture", user.ProfilePicture ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

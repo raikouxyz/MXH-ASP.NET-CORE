@@ -1,0 +1,294 @@
+@model IEnumerable<dynamic>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quản lý người dùng</h2>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-plus"></i> Thêm người dùng
+        </button>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="usersTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Họ tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Ngày tạo</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>@user.Id</td>
+                                <td>@user.Username</td>
+                                <td>@user.FullName</td>
+                                <td>@user.Email</td>
+                                <td>@user.PhoneNumber</td>
+                                <td>@user.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@(user.Role.ToString() == "Admin" ? "Admin" : "User")</td>
+                                <td>
+                                    @if (user.IsActive)
+                                    {
+                                        <span class="badge bg-success">Đang hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Đã khóa</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-primary" onclick="editUser(@user.Id)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteUser(@user.Id)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm người dùng -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm người dùng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" name="Username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu</label>
+                        <input type="password" class="form-control" name="PasswordHash" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên</label>
+                        <input type="text" class="form-control" name="FullName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" name="PhoneNumber">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vai trò</label>
+                        <select class="form-select" name="Role">
+                            <option value="User">User</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="addUser()">Thêm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal sửa người dùng -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sửa thông tin người dùng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" name="Id">
+                    <div class="mb-3">
+                        <label class="form-label">Tên đăng nhập</label>
+                        <input type="text" class="form-control" name="Username" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mật khẩu mới (để trống nếu không đổi)</label>
+                        <input type="password" class="form-control" name="PasswordHash">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Họ tên</label>
+                        <input type="text" class="form-control" name="FullName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" name="PhoneNumber">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Vai trò</label>
+                        <select class="form-select" name="Role" required>
+                            <option value="User">User</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" name="IsActive">
+                            <option value="true">Đang hoạt động</option>
+                            <option value="false">Đã khóa</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="updateUser()">Cập nhật</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script>
+        var usersTable;
+        $(document).ready(function() {
+            // Khởi tạo lại DataTable, chỉ cho phép 10 dòng/trang, không cho chọn số dòng khác
+            usersTable = $('#usersTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json'
+                },
+                pageLength: 10, // Luôn hiển thị 10 dòng mỗi trang
+                lengthMenu: [[10], [10]], // Chỉ cho phép chọn 10
+                ordering: true,
+                searching: false,
+                responsive: true,
+                autoWidth: false
+            });
+        });
+
+        // Thêm người dùng mới
+        function addUser() {
+            var formData = {};
+            $('#addUserForm').serializeArray().forEach(function(item) {
+                formData[item.name] = item.value;
+            });
+
+            $.ajax({
+                url: '/Admin/AddUser',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Lỗi: ' + error);
+                }
+            });
+        }
+
+        // Sửa người dùng
+        function editUser(id) {
+            $.get('/Admin/GetUserDetails/' + id, function(response) {
+                if (response.success) {
+                    var user = response.data;
+                    var form = $('#editUserForm');
+                    form.find('[name=Id]').val(user.id);
+                    form.find('[name=Username]').val(user.username);
+                    form.find('[name=FullName]').val(user.fullName);
+                    form.find('[name=Email]').val(user.email);
+                    form.find('[name=PhoneNumber]').val(user.phoneNumber);
+                    form.find('[name=Role]').val(user.role);
+                    form.find('[name=IsActive]').val(user.isActive.toString().toLowerCase());
+                    $('#editUserModal').modal('show');
+                } else {
+                    alert(response.message);
+                }
+            });
+        }
+
+        // Cập nhật người dùng
+        function updateUser() {
+            var form = $('#editUserForm');
+            var formData = {
+                Id: parseInt(form.find('[name=Id]').val()),
+                Username: form.find('[name=Username]').val(),
+                FullName: form.find('[name=FullName]').val(),
+                Email: form.find('[name=Email]').val(),
+                PhoneNumber: form.find('[name=PhoneNumber]').val(),
+                Role: form.find('[name=Role]').val(),
+                IsActive: form.find('[name=IsActive]').val() === 'true',
+                PasswordHash: form.find('[name=PasswordHash]').val()
+            };
+
+            $.ajax({
+                url: '/Admin/UpdateUser',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Lỗi: ' + error);
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+
+        // Xóa người dùng
+        function deleteUser(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+                $.ajax({
+                    url: '/Admin/DeleteUser/' + id,
+                    type: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            alert(response.message);
+                            location.reload();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('Lỗi: ' + error);
+                    }
+                });
+            }
+        }
+    </script>
+} 

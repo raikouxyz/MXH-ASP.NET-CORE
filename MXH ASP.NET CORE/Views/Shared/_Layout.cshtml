@@ -10,79 +10,93 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg">
-            <div class="container-fluid">
-                <!-- Logo -->
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">
-                    <i class="fab fa-facebook"></i> VibeNet
-                </a>
+    @{
+        var isAdminArea = Context.Request.Path.Value.ToLower().StartsWith("/admin");
+    }
+    @if (!isAdminArea)
+    {
+        <header>
+            <nav class="navbar navbar-expand-lg">
+                <div class="container-fluid">
+                    <!-- Logo -->
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                        <i class="fab fa-facebook"></i> VibeNet
+                    </a>
 
-                <!-- Search Box -->
-            <div class="search-box mx-auto">
-                <form action="/Search" method="get" id="searchForm">
-                    <div class="search-wrapper">
-                        <div class="input-group">
-                            <input type="text" name="query" id="searchInput" 
-                                class="form-control border-start-0" 
-                                placeholder="Tìm kiếm trên VibeNet..." 
-                                autocomplete="off" />
-                            <button type="submit" class="btn btn-primary search-btn">
-                                <i class="fas fa-search"></i>
-                            </button>
+                    <!-- Search Box -->
+                <div class="search-box mx-auto">
+                    <form action="/Search" method="get" id="searchForm">
+                        <div class="search-wrapper">
+                            <div class="input-group">
+                                <input type="text" name="query" id="searchInput" 
+                                    class="form-control border-start-0" 
+                                    placeholder="Tìm kiếm trên VibeNet..." 
+                                    autocomplete="off" />
+                                <button type="submit" class="btn btn-primary search-btn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </form>
-            </div>
-
-                <!-- User Menu -->
-                <div class="user-menu">
-                    @if (User.Identity.IsAuthenticated)
-                    {
-                        <div class="dropdown">
-                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
-                               id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                @{
-                                    var profilePicture = ViewBag.CurrentUserAvatar as string ?? "/uploads/avatars/default-avatar.svg";
-                                    var userName = ViewBag.CurrentUserName as string ?? "";
-                                }
-                                <img src="@profilePicture" 
-                                     alt="Avatar" 
-                                     class="user-avatar me-2"
-                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                                <span class="text-dark">@userName</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                                        <i class="fas fa-user"></i>Trang cá nhân
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
-                                        <i class="fas fa-key"></i>Đổi mật khẩu
-                                    </a>
-                                </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li>
-                                    <form asp-controller="Account" asp-action="Logout" method="post">
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt"></i>Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-primary me-2">Đăng nhập</a>
-                        <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary">Đăng ký</a>
-                    }
+                    </form>
                 </div>
-            </div>
-        </nav>
-    </header>
+
+                    <!-- User Menu -->
+                    <div class="user-menu">
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <div class="dropdown">
+                                <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" 
+                                   id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    @{
+                                        var profilePicture = ViewBag.CurrentUserAvatar as string ?? "/uploads/avatars/default-avatar.svg";
+                                        var userName = ViewBag.CurrentUserName as string ?? "";
+                                    }
+                                    <img src="@profilePicture" 
+                                         alt="Avatar" 
+                                         class="user-avatar me-2"
+                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                                    <span class="text-dark">@userName</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                            <i class="fas fa-user"></i>Trang cá nhân
+                                        </a>
+                                    </li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Admin" asp-action="Index">
+                                                <i class="fas fa-cog"></i>Quản trị
+                                            </a>
+                                        </li>
+                                    }
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                                            <i class="fas fa-key"></i>Đổi mật khẩu
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt"></i>Đăng xuất
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-primary me-2">Đăng nhập</a>
+                            <a asp-controller="Account" asp-action="Register" class="btn btn-outline-primary">Đăng ký</a>
+                        }
+                    </div>
+                </div>
+            </nav>
+        </header>
+    }
 
     <main role="main">
         @RenderBody()
