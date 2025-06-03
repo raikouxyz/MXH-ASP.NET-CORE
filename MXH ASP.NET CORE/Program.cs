@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
 using MXH_ASP.NET_CORE.Services;
+using MXH_ASP.NET_CORE.Seeders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,5 +55,12 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    context.Database.EnsureCreated();
+    MXH_ASP.NET_CORE.Seeders.DatabaseSeeder.Seed(context);
+}
 
 app.Run();
