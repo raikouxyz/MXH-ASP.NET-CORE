@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
@@ -8,20 +8,19 @@ using System.Text.RegularExpressions;
 
 namespace MXH_ASP.NET_CORE.Controllers
 {
-    public class SearchController : Controller
+    public class SearchController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<SearchController> _logger;
 
-        public SearchController(ApplicationDbContext context, ILogger<SearchController> logger)
+        public SearchController(ApplicationDbContext context, ILogger<SearchController> logger) : base(context)
         {
-            _context = context;
             _logger = logger;
         }
 
         // Hiển thị trang tìm kiếm
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
             return View();
         }
 

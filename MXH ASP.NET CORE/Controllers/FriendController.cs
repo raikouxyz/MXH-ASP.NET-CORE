@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
@@ -9,14 +9,12 @@ using System.Security.Claims;
 namespace MXH_ASP.NET_CORE.Controllers
 {
     [Authorize] // Yêu cầu đăng nhập để truy cập trang bạn bè
-    public class FriendController : Controller
+    public class FriendController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<FriendController> _logger;
 
-        public FriendController(ApplicationDbContext context, ILogger<FriendController> logger)
+        public FriendController(ApplicationDbContext context, ILogger<FriendController> logger) : base(context)
         {
-            _context = context;
             _logger = logger;
         }
 
@@ -25,6 +23,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         public async Task<IActionResult> Index()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -148,6 +148,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendRequest(int userId, string returnUrl = null)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -237,6 +239,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptRequest(int friendshipId, string returnUrl = null)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -289,6 +293,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectRequest(int friendshipId, string returnUrl = null)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -338,6 +344,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CancelRequest(int friendshipId)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -382,6 +390,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Unfriend(int userId)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -428,6 +438,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [HttpGet]
         public async Task<IActionResult> Search(string query)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             if (string.IsNullOrWhiteSpace(query))
             {
                 return RedirectToAction("Index");
@@ -500,6 +512,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSuggestions()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID của người dùng hiện tại
@@ -555,6 +569,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [HttpGet]
         public async Task<IActionResult> GetFriends()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);

@@ -1,16 +1,17 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Services;
 
 namespace MXH_ASP.NET_CORE.Controllers
 {
     [Authorize]
-    public class FavoritePostController : Controller
+    public class FavoritePostController : BaseController
     {
         private readonly IFavoritePostService _favoritePostService;
 
-        public FavoritePostController(IFavoritePostService favoritePostService)
+        public FavoritePostController(ApplicationDbContext context, IFavoritePostService favoritePostService) : base(context)
         {
             _favoritePostService = favoritePostService;
         }
@@ -38,6 +39,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [HttpGet]
         public async Task<IActionResult> MyFavorites()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();

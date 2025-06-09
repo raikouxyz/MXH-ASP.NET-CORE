@@ -13,18 +13,16 @@ namespace MXH_ASP.NET_CORE.Controllers
 {
     [Authorize]
     [Route("[controller]")]
-    public class ProfileController : Controller
+    public class ProfileController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ProfileController> _logger;
 
         public ProfileController(
             ApplicationDbContext context, 
             IWebHostEnvironment webHostEnvironment,
-            ILogger<ProfileController> logger)
+            ILogger<ProfileController> logger) : base(context)
         {
-            _context = context;
             _webHostEnvironment = webHostEnvironment;
             _logger = logger;
         }
@@ -35,6 +33,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [Route("Index")]
         public async Task<IActionResult> Index()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 _logger.LogInformation("Accessing Profile/Index");
@@ -95,6 +95,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [Route("Index/{id}")]
         public async Task<IActionResult> Index(int id)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 _logger.LogInformation($"Accessing Profile/Index/{id}");
@@ -117,7 +119,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                 _logger.LogInformation($"Found user: {user.Username}");
 
                 // Kiểm tra xem có phải profile của người dùng hiện tại không
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
                 var isCurrentUser = currentUserId == id;
 
                 var viewModel = new UserProfileViewModel
@@ -146,6 +148,8 @@ namespace MXH_ASP.NET_CORE.Controllers
         [Route("Edit")]
         public async Task<IActionResult> Edit()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 _logger.LogInformation("Accessing Profile/Edit");
@@ -216,6 +220,7 @@ namespace MXH_ASP.NET_CORE.Controllers
 
                 if (!ModelState.IsValid)
                 {
+                    await SetCurrentUserInfo(); // Set lại info nếu có lỗi validation
                     _logger.LogWarning("Invalid model state in Profile/Edit POST");
                     foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                     {
@@ -242,6 +247,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                         .FirstOrDefaultAsync(u => u.Username == viewModel.Username && u.Id != user.Id);
                     if (existingUser != null)
                     {
+                        await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                         _logger.LogWarning($"Username already exists: {viewModel.Username}");
                         ModelState.AddModelError("Username", "Tên đăng nhập này đã tồn tại");
                         return View(viewModel);
@@ -255,6 +261,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                         .FirstOrDefaultAsync(u => u.Email == viewModel.Email && u.Id != user.Id);
                     if (existingUser != null)
                     {
+                        await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                         _logger.LogWarning($"Email already exists: {viewModel.Email}");
                         ModelState.AddModelError("Email", "Email này đã được sử dụng");
                         return View(viewModel);
@@ -298,6 +305,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     }
                     catch (Exception ex)
                     {
+                        await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                         _logger.LogError(ex, "Error uploading profile picture");
                         ModelState.AddModelError("", "Có lỗi xảy ra khi tải lên ảnh đại diện");
                         return View(viewModel);
@@ -321,6 +329,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                 }
                 catch (DbUpdateException ex)
                 {
+                    await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                     _logger.LogError(ex, "Database error while updating profile");
                     ModelState.AddModelError("", "Có lỗi xảy ra khi lưu thông tin. Vui lòng thử lại sau.");
                     return View(viewModel);
@@ -328,6 +337,7 @@ namespace MXH_ASP.NET_CORE.Controllers
             }
             catch (Exception ex)
             {
+                await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                 _logger.LogError(ex, "Error in Profile/Edit POST");
                 ModelState.AddModelError("", "Có lỗi xảy ra khi cập nhật thông tin");
                 return View(viewModel);

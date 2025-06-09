@@ -1,78 +1,533 @@
-@{
+﻿@{
     ViewData["Title"] = "Chào mừng đến với VibeNet";
 }
 
-<div class="welcome-container">
-    <div class="row align-items-center">
-        <div class="col-md-6">
-            <div class="welcome-text">
-                <h1 class="display-4 fw-bold mb-4">Chào mừng đến với VibeNet</h1>
-                <p class="lead mb-4">Kết nối với bạn bè, chia sẻ khoảnh khắc, và khám phá thông tin mới mỗi ngày.</p>
-                <div class="d-grid gap-2 d-md-flex">
-                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg px-4 me-md-2">Đăng ký ngay</a>
-                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary btn-lg px-4">Đăng nhập</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <img src="/images/welcome-illustration.svg" alt="Welcome Illustration" class="img-fluid welcome-image" onerror="this.src='/images/default-welcome.png'; this.onerror=null;">
-        </div>
-    </div>
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-6 col-md-12 order-2 order-lg-1">
+                <div class="hero-content">
+                    <h1 class="hero-title">Kết nối với bạn bè trên <span class="brand-highlight">VibeNet</span></h1>
+                    <p class="hero-description">Chia sẻ khoảnh khắc đáng nhớ với những người bạn yêu thương. Khám phá những câu chuyện mới từ cộng đồng và giữ liên lạc với bạn bè, gia đình.</p>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="hero-actions">
+                        <a asp-controller="Account" asp-action="Register" class="btn btn-facebook btn-hero">
+                            Tạo tài khoản mới
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-facebook btn-hero">
+                            Đăng nhập
+                        </a>
+                    </div>
 
-    <div class="row mt-5 pt-5">
-        <div class="col-md-4 mb-4">
-            <div class="feature-card text-center p-4">
-                <div class="feature-icon mb-3">
-                    <i class="fas fa-users fa-3x text-primary"></i>
+                    <!-- Quick Stats -->
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <i class="fas fa-users text-facebook"></i>
+                            <span>Kết nối với hàng ngàn người dùng</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-shield-alt text-facebook"></i>
+                            <span>An toàn và bảo mật</span>
+                        </div>
+                    </div>
                 </div>
-                <h3>Kết nối</h3>
-                <p>Tìm kiếm và kết nối với bạn bè, gia đình và những người có cùng sở thích.</p>
             </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="feature-card text-center p-4">
-                <div class="feature-icon mb-3">
-                    <i class="fas fa-share-alt fa-3x text-primary"></i>
+            
+            <div class="col-lg-6 col-md-12 order-1 order-lg-2">
+                <div class="hero-image-wrapper">
+                    <div class="phone-mockup">
+                        <div class="phone-screen">
+                            <!-- Facebook-like interface mockup -->
+                            <div class="mock-header">
+                                <div class="mock-logo">VibeNet</div>
+                                <div class="mock-search">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                            </div>
+                            <div class="mock-post">
+                                <div class="mock-avatar"></div>
+                                <div class="mock-content">
+                                    <div class="mock-name">Nguyễn Văn A</div>
+                                    <div class="mock-text">Vừa chia sẻ một khoảnh khắc tuyệt vời!</div>
+                                    <div class="mock-image"></div>
+                                    <div class="mock-actions">
+                                        <span><i class="fas fa-heart"></i> 25</span>
+                                        <span><i class="fas fa-comment"></i> 5</span>
+                                        <span><i class="fas fa-share"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Floating notification -->
+                    <div class="floating-notification">
+                        <i class="fas fa-bell text-facebook"></i>
+                        <span>3 thông báo mới</span>
+                    </div>
                 </div>
-                <h3>Chia sẻ</h3>
-                <p>Chia sẻ những khoảnh khắc, suy nghĩ và trải nghiệm của bạn với cộng đồng.</p>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="feature-card text-center p-4">
-                <div class="feature-icon mb-3">
-                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
-                </div>
-                <h3>An toàn</h3>
-                <p>Dữ liệu của bạn luôn được bảo vệ với các tính năng bảo mật tiên tiến.</p>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header text-center">
+            <h2 class="section-title">Tính năng nổi bật</h2>
+            <p class="section-description">Những công cụ giúp bạn kết nối và chia sẻ một cách hiệu quả nhất</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="feature-title">Tìm bạn bè</h3>
+                    <p class="feature-description">Dễ dàng tìm kiếm và kết nối với bạn bè, đồng nghiệp và những người bạn biết.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-images"></i>
+                    </div>
+                    <h3 class="feature-title">Chia sẻ ảnh & video</h3>
+                    <p class="feature-description">Đăng tải và chia sẻ những khoảnh khắc đẹp qua hình ảnh và video chất lượng cao.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="feature-title">Nhắn tin tức thì</h3>
+                    <p class="feature-description">Trò chuyện riêng tư với bạn bè thông qua tin nhắn tức thì, chia sẻ hình ảnh và emoji.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="feature-title">Tương tác bài viết</h3>
+                    <p class="feature-description">Thích, bình luận và chia sẻ những bài viết thú vị từ bạn bè và cộng đồng.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 class="feature-title">Thông báo thông minh</h3>
+                    <p class="feature-description">Nhận thông báo kịp thời về các hoạt động quan trọng từ bạn bè và cộng đồng.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h3 class="feature-title">Quyền riêng tư</h3>
+                    <p class="feature-description">Kiểm soát hoàn toàn quyền riêng tư với các tùy chọn bảo mật nâng cao.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center">
+                <h2 class="cta-title">Tham gia VibeNet ngay hôm nay</h2>
+                <p class="cta-description">Miễn phí và luôn sẽ như vậy</p>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-facebook btn-lg">
+                    Đăng ký
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 
 <style>
-    .welcome-container {
-        padding: 3rem 0;
+    :root {
+        --facebook-blue: #1877f2;
+        --facebook-blue-dark: #166fe5;
+        --facebook-blue-light: #42a5f5;
+        --facebook-gray: #f0f2f5;
+        --facebook-gray-dark: #e4e6ea;
+        --facebook-text: #1c1e21;
+        --facebook-text-secondary: #65676b;
+        --facebook-green: #42b883;
+        --facebook-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        --facebook-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
-    
-    .welcome-text {
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: var(--facebook-text);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        background: linear-gradient(135deg, var(--facebook-blue) 0%, var(--facebook-blue-light) 100%);
+        padding: 4rem 0;
+        color: white;
+    }
+
+    .hero-content {
         padding: 2rem 0;
     }
-    
-    .feature-card {
-        border-radius: 10px;
-        background-color: #fff;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+    }
+
+    .brand-highlight {
+        color: #fff;
+        text-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    .hero-description {
+        font-size: 1.25rem;
+        line-height: 1.6;
+        margin-bottom: 2.5rem;
+        opacity: 0.95;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-hero {
+        padding: 0.75rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        min-width: 160px;
+    }
+
+    .btn-facebook {
+        background-color: var(--facebook-blue);
+        border: 1px solid var(--facebook-blue);
+        color: white;
+    }
+
+    .btn-facebook:hover {
+        background-color: var(--facebook-blue-dark);
+        border-color: var(--facebook-blue-dark);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-facebook {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        backdrop-filter: blur(10px);
+    }
+
+    .btn-outline-facebook:hover {
+        background: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    /* Hero Stats */
+    .hero-stats {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .text-facebook {
+        color: #fff !important;
+    }
+
+    /* Phone Mockup */
+    .hero-image-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .phone-mockup {
+        width: 300px;
+        height: 600px;
+        background: #000;
+        border-radius: 25px;
+        padding: 20px;
+        box-shadow: var(--facebook-shadow-hover);
+        position: relative;
+    }
+
+    .phone-screen {
+        width: 100%;
         height: 100%;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .mock-header {
+        background: var(--facebook-blue);
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mock-logo {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .mock-post {
+        padding: 1rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .mock-avatar {
+        width: 40px;
+        height: 40px;
+        background: var(--facebook-blue);
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .mock-content {
+        flex: 1;
+    }
+
+    .mock-name {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    .mock-text {
+        color: var(--facebook-text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .mock-image {
+        width: 100%;
+        height: 120px;
+        background: var(--facebook-gray);
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .mock-actions {
+        display: flex;
+        gap: 1rem;
+        color: var(--facebook-text-secondary);
+        font-size: 0.8rem;
+    }
+
+    .mock-actions span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Floating Notification */
+    .floating-notification {
+        position: absolute;
+        top: 20%;
+        right: -20px;
+        background: white;
+        padding: 0.75rem 1rem;
+        border-radius: 25px;
+        box-shadow: var(--facebook-shadow-hover);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        animation: bounce 2s infinite;
+    }
+
+    keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 5rem 0;
+        background: var(--facebook-gray);
+    }
+
+    .section-header {
+        margin-bottom: 4rem;
+    }
+
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--facebook-text);
+        margin-bottom: 1rem;
+    }
+
+    .section-description {
+        font-size: 1.125rem;
+        color: var(--facebook-text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: var(--facebook-shadow);
         transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid var(--facebook-gray-dark);
     }
-    
+
     .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+        box-shadow: var(--facebook-shadow-hover);
     }
-    
-    .welcome-image {
-        max-height: 500px;
+
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: var(--facebook-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .feature-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .feature-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--facebook-text);
+    }
+
+    .feature-description {
+        color: var(--facebook-text-secondary);
+        line-height: 1.6;
+    }
+
+    /* CTA Section */
+    .cta-section {
+        background: white;
+        padding: 4rem 0;
+        text-align: center;
+    }
+
+    .cta-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--facebook-text);
+    }
+
+    .cta-description {
+        font-size: 1.125rem;
+        margin-bottom: 2rem;
+        color: var(--facebook-text-secondary);
+    }
+
+    /* Responsive Design */
+    media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.25rem;
+        }
+        
+        .hero-description {
+            font-size: 1.1rem;
+        }
+        
+        .hero-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .phone-mockup {
+            width: 250px;
+            height: 500px;
+        }
+        
+        .floating-notification {
+            position: static;
+            margin-top: 2rem;
+            align-self: center;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .feature-card {
+            padding: 1.5rem;
+        }
+    }
+
+    media (max-width: 576px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .phone-mockup {
+            width: 200px;
+            height: 400px;
+        }
+        
+        .mock-header {
+            padding: 0.75rem;
+        }
+        
+        .mock-post {
+            padding: 0.75rem;
+        }
+        
+        .section-title {
+            font-size: 1.75rem;
+        }
     }
 </style> 

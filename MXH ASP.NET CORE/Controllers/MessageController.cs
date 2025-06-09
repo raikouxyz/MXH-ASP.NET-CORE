@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
@@ -20,14 +20,13 @@ namespace MXH_ASP.NET_CORE.Controllers
     }
 
     [Authorize]
-    public class MessageController : Controller
+    public class MessageController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<MessageController> _logger;
 
-        public MessageController(ApplicationDbContext context, ILogger<MessageController> logger)
+        public MessageController(ApplicationDbContext context, ILogger<MessageController> logger) 
+            : base(context)
         {
-            _context = context;
             _logger = logger;
         }
 
@@ -37,10 +36,12 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         public async Task<IActionResult> Chat(int userId)
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
                 // Lấy ID người dùng hiện tại
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 _logger.LogInformation($"Accessing chat with userId: {userId}. Current user ID: {currentUserId}");
 
@@ -123,7 +124,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                 }
 
                 // Lấy ID người dùng hiện tại
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 // Kiểm tra xem hai người dùng có phải là bạn bè không
                 var friendship = await _context.Friendships
@@ -174,7 +175,7 @@ namespace MXH_ASP.NET_CORE.Controllers
         {
             try
             {
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 var messages = await _context.Messages
                     .Where(m => 
@@ -219,9 +220,11 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// </summary>
         public async Task<IActionResult> Index()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
+
             try
             {
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 // Lấy danh sách bạn bè đã kết bạn
                 var friendships = await _context.Friendships
@@ -272,7 +275,7 @@ namespace MXH_ASP.NET_CORE.Controllers
         {
             try
             {
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 // Lấy danh sách tin nhắn chưa đọc, sắp xếp theo thời gian để lấy những tin mới nhất
                 var unreadMessages = await _context.Messages
@@ -330,7 +333,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                     return Json(new { success = false, message = "Kích thước file không được vượt quá 5MB" });
                 }
 
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
                 // Kiểm tra tình trạng bạn bè
                 var friendship = await _context.Friendships

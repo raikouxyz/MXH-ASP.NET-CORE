@@ -12,15 +12,13 @@ using System.Security.Claims;
 
 namespace MXH_ASP.NET_CORE.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly ISmsSender _smsSender;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(ApplicationDbContext context, ISmsSender smsSender, ILogger<AccountController> logger)
+        public AccountController(ApplicationDbContext context, ISmsSender smsSender, ILogger<AccountController> logger) : base(context)
         {
-            _context = context;
             _smsSender = smsSender;
             _logger = logger;
         }
@@ -315,8 +313,9 @@ namespace MXH_ASP.NET_CORE.Controllers
         /// Hiển thị form đổi mật khẩu
         /// </summary>
         [Authorize]
-        public IActionResult ChangePassword()
+        public async Task<IActionResult> ChangePassword()
         {
+            await SetCurrentUserInfo(); // Gọi method từ base class
             return View();
         }
 
@@ -331,13 +330,14 @@ namespace MXH_ASP.NET_CORE.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await SetCurrentUserInfo(); // Set lại info nếu có lỗi validation
                 return View(model);
             }
 
             try
             {
                 // Lấy thông tin người dùng hiện tại
-                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+                var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
                 var user = await _context.Users.FindAsync(userId);
 
                 if (user == null)
@@ -350,6 +350,7 @@ namespace MXH_ASP.NET_CORE.Controllers
                 // Kiểm tra mật khẩu hiện tại
                 if (!BCrypt.Net.BCrypt.Verify(model.CurrentPassword, user.PasswordHash))
                 {
+                    await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                     ModelState.AddModelError("CurrentPassword", "Mật khẩu hiện tại không đúng");
                     return View(model);
                 }
@@ -366,6 +367,7 @@ namespace MXH_ASP.NET_CORE.Controllers
             {
                 // Log lỗi
                 _logger.LogError(ex, "Lỗi khi đổi mật khẩu");
+                await SetCurrentUserInfo(); // Set lại info nếu có lỗi
                 ModelState.AddModelError(string.Empty, "Có lỗi xảy ra khi đổi mật khẩu. Vui lòng thử lại sau.");
                 return View(model);
             }
