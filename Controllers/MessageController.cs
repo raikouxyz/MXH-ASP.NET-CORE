@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
 using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
+using MXH_ASP.NET_CORE.Hubs;
 
 namespace MXH_ASP.NET_CORE.Controllers
 {
@@ -23,11 +25,13 @@ namespace MXH_ASP.NET_CORE.Controllers
     public class MessageController : BaseController
     {
         private readonly ILogger<MessageController> _logger;
+        private readonly IHubContext<ChatHub> _hubContext; // Thêm SignalR Hub context
 
-        public MessageController(ApplicationDbContext context, ILogger<MessageController> logger) 
+        public MessageController(ApplicationDbContext context, ILogger<MessageController> logger, IHubContext<ChatHub> hubContext) 
             : base(context)
         {
             _logger = logger;
+            _hubContext = hubContext; // Inject SignalR Hub context
         }
 
         // GET: /Message/Chat/{userId}
@@ -40,8 +44,12 @@ namespace MXH_ASP.NET_CORE.Controllers
 
             try
             {
-                // Lấy ID người dùng hiện tại
-                var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+                // Lấy thông tin người dùng hiện tại
+                var currentUserId = GetCurrentUserId();
+                if (currentUserId == 0)
+                {
+                    return RedirectToAction("Login", "Account");
+                }
 
                 _logger.LogInformation($"Accessing chat with userId: {userId}. Current user ID: {currentUserId}");
 
@@ -74,30 +82,35 @@ namespace MXH_ASP.NET_CORE.Controllers
                         (m.SenderId == currentUserId && m.ReceiverId == userId) ||
                         (m.SenderId == userId && m.ReceiverId == currentUserId))
                     .OrderBy(m => m.CreatedAt)
-                    .Select(m => new
-                    {
-                        m.Id,
-                        m.Content,
-                        m.ImageUrl,
-                        m.CreatedAt,
-                        m.IsRead,
-                        IsSender = m.SenderId == currentUserId
-                    })
                     .ToListAsync();
 
-                // Đánh dấu tin nhắn chưa đọc là đã đọc
-                var unreadMessages = await _context.Messages
-                    .Where(m => m.ReceiverId == currentUserId && m.SenderId == userId && !m.IsRead)
-                    .ToListAsync();
-
+                // Đánh dấu tất cả tin nhắn từ người nhận là đã đọc
+                var unreadMessages = messages.Where(m => m.SenderId == userId && !m.IsRead).ToList();
                 foreach (var message in unreadMessages)
                 {
                     message.IsRead = true;
                 }
-                await _context.SaveChangesAsync();
+                
+                if (unreadMessages.Any())
+                {
+                    await _context.SaveChangesAsync();
+                    
+                    // Gửi thông báo SignalR rằng tin nhắn đã được đọc
+                    await _hubContext.Clients.User(userId.ToString()).SendAsync("MessagesRead", new { readerId = currentUserId });
+                }
 
+                // Chuẩn bị dữ liệu cho view
                 ViewBag.Receiver = receiver;
-                ViewBag.Messages = messages;
+                ViewBag.CurrentUserId = currentUserId;
+                ViewBag.Messages = messages.Select(m => new
+                {
+                    m.Id,
+                    m.Content,
+                    m.ImageUrl,
+                    m.CreatedAt,
+                    m.IsRead,
+                    IsSender = m.SenderId == currentUserId
+                }).ToList();
 
                 return View();
             }
@@ -268,7 +281,8 @@ namespace MXH_ASP.NET_CORE.Controllers
 
         // GET: /Message/CheckNewMessagesCount
         /// <summary>
-        /// Kiểm tra số lượng tin nhắn chưa đọc của người dùng hiện tại và trả về thông tin người gửi.
+        /// API để kiểm tra số lượng tin nhắn chưa đọc - vẫn giữ cho compatibility
+        /// Tuy nhiên, real-time notifications sẽ được xử lý qua SignalR
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> CheckNewMessagesCount()
@@ -307,7 +321,11 @@ namespace MXH_ASP.NET_CORE.Controllers
             }
         }
 
-        // Thêm action mới để xử lý upload hình ảnh
+        // POST: /Message/SendImage
+        /// <summary>
+        /// Upload và gửi hình ảnh thông qua SignalR
+        /// API endpoint này chỉ để upload file, việc gửi tin nhắn sẽ thông qua SignalR
+        /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendImage(int receiverId, IFormFile image)
@@ -363,35 +381,27 @@ namespace MXH_ASP.NET_CORE.Controllers
                     await image.CopyToAsync(fileStream);
                 }
 
-                // Tạo tin nhắn mới với hình ảnh
-                var message = new Message
-                {
-                    SenderId = currentUserId,
-                    ReceiverId = receiverId,
-                    Content = "", // Để trống vì đây là tin nhắn hình ảnh
-                    ImageUrl = "/uploads/messages/" + uniqueFileName,
-                    CreatedAt = DateTime.UtcNow
-                };
+                var imageUrl = "/uploads/messages/" + uniqueFileName;
 
-                _context.Messages.Add(message);
-                await _context.SaveChangesAsync();
-
+                // Trả về URL để client gửi qua SignalR
                 return Json(new { 
                     success = true, 
-                    message = new {
-                        id = message.Id,
-                        content = message.Content,
-                        imageUrl = message.ImageUrl,
-                        createdAt = message.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                        isSender = true
-                    }
+                    imageUrl = imageUrl,
+                    message = "Upload hình ảnh thành công. Đang gửi tin nhắn..."
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi gửi hình ảnh");
-                return Json(new { success = false, message = "Có lỗi xảy ra khi gửi hình ảnh" });
+                _logger.LogError(ex, "Lỗi khi upload hình ảnh");
+                return Json(new { success = false, message = "Có lỗi xảy ra khi upload hình ảnh" });
             }
         }
+
+        // Helper method để lấy ID người dùng hiện tại
+        private int GetCurrentUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            return claim != null ? int.Parse(claim.Value) : 0;
+        }
     }
-} 
+}

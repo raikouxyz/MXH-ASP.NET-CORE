@@ -4,6 +4,7 @@ using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
 using MXH_ASP.NET_CORE.Services;
 using MXH_ASP.NET_CORE.Seeders;
+using MXH_ASP.NET_CORE.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddControllersWithViews();
+
+// Thêm SignalR service để hỗ trợ real-time messaging
+builder.Services.AddSignalR();
 
 // Cấu hình xác thực Cookie
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -55,6 +59,9 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// Map SignalR ChatHub để xử lý real-time messaging
+app.MapHub<ChatHub>("/chatHub");
 
 using (var scope = app.Services.CreateScope())
 {
