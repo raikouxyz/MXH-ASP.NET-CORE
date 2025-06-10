@@ -19,7 +19,7 @@ Công nghệ sử dụng:
 Backend: ASP.NET Core 8.0, Entity Framework Core 9
 Frontend: Razor Pages (Views)
 Cơ sở dữ liệu: SQL Server
-Realtime: AJAX (chat)
+Realtime: SignalR (chat)
 Xác thực: Cookie Authentication, Identity
 Các package: BCrypt.Net, Microsoft.AspNetCore.Identity, EntityFrameworkCore
 
