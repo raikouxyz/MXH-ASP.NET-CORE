@@ -276,19 +276,25 @@
                 $.ajax({
                     url: '/Admin/DeleteUser/' + id,
                     type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
                     success: function(response) {
                         if (response.success) {
                             alert(response.message);
                             location.reload();
                         } else {
-                            alert(response.message);
+                            alert('Lỗi: ' + response.message);
                         }
                     },
                     error: function(xhr, status, error) {
-                        alert('Lỗi: ' + error);
+                        console.error('Error details:', xhr.responseText);
+                        alert('Lỗi khi xóa người dùng: ' + error);
                     }
                 });
             }
         }
     </script>
-} 
+}
+
+@Html.AntiForgeryToken() 
