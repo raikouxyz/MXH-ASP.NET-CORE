@@ -20,7 +20,7 @@ Backend: ASP.NET Core 8.0, Entity Framework Core 9
 Frontend: Razor Pages (Views)
 Cơ sở dữ liệu: SQL Server
 Realtime: SignalR (chat)
-Xác thực: Cookie Authentication, Identity
+Xác thực: Cookie Authentication
 Các package: BCrypt.Net, Microsoft.AspNetCore.Identity, EntityFrameworkCore
 
 Hướng dẫn cài đặt và chạy dự án:
