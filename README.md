@@ -21,7 +21,7 @@ Công nghệ sử dụng:
 - Cơ sở dữ liệu: SQL Server
 - Realtime: SignalR (chat)
 - Xác thực: Cookie Authentication
-- Các package: BCrypt.Net, Microsoft.AspNetCore.Identity, EntityFrameworkCore
+- Các package: BCrypt.Net, EntityFrameworkCore
 
 Hướng dẫn cài đặt và chạy dự án:
 1. Clone dự án: git clone https://github.com/raikouxyz/MXH-ASP.NET-CORE.git
