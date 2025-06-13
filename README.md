@@ -16,12 +16,12 @@ Tính năng chính:
 - Seed dữ liệu mẫu
 
 Công nghệ sử dụng:
-Backend: ASP.NET Core 8.0, Entity Framework Core 9
-Frontend: Razor Pages (Views)
-Cơ sở dữ liệu: SQL Server
-Realtime: SignalR (chat)
-Xác thực: Cookie Authentication
-Các package: BCrypt.Net, Microsoft.AspNetCore.Identity, EntityFrameworkCore
+- Backend: ASP.NET Core 8.0, Entity Framework Core 9
+- Frontend: Razor Pages (Views)
+- Cơ sở dữ liệu: SQL Server
+- Realtime: SignalR (chat)
+- Xác thực: Cookie Authentication
+- Các package: BCrypt.Net, Microsoft.AspNetCore.Identity, EntityFrameworkCore
 
 Hướng dẫn cài đặt và chạy dự án:
 1. Clone dự án: git clone https://github.com/raikouxyz/MXH-ASP.NET-CORE.git
