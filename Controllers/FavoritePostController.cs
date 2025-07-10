@@ -9,9 +9,9 @@ namespace MXH_ASP.NET_CORE.Controllers
     [Authorize]
     public class FavoritePostController : BaseController
     {
-        private readonly IFavoritePostService _favoritePostService;
+        private readonly FavoritePostService _favoritePostService;
 
-        public FavoritePostController(ApplicationDbContext context, IFavoritePostService favoritePostService) : base(context)
+        public FavoritePostController(ApplicationDbContext context, FavoritePostService favoritePostService) : base(context)
         {
             _favoritePostService = favoritePostService;
         }

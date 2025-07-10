@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using MXH_ASP.NET_CORE.Data;
 using MXH_ASP.NET_CORE.Models;
@@ -31,11 +31,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.SlidingExpiration = true;
     });
 
-// Đăng ký dịch vụ SMS
-builder.Services.AddScoped<ISmsSender, SmsSender>();
-
 // Đăng ký các dịch vụ
-builder.Services.AddScoped<IFavoritePostService, FavoritePostService>();
+builder.Services.AddScoped<FavoritePostService>();
 
 var app = builder.Build();
 

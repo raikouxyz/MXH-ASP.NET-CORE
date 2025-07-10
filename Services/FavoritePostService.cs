@@ -8,7 +8,7 @@ using MXH_ASP.NET_CORE.Models;
 
 namespace MXH_ASP.NET_CORE.Services
 {
-    public class FavoritePostService : IFavoritePostService
+    public class FavoritePostService
     {
         private readonly ApplicationDbContext _context;
 
