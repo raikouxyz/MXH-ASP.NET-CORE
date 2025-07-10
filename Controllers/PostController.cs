@@ -8,14 +8,13 @@ using System.Security.Claims;
 namespace MXH_ASP.NET_CORE.Controllers
 {
     [Authorize] // Yêu cầu đăng nhập để sử dụng các chức năng liên quan đến bài viết
-    public class PostController : Controller
+    public class PostController : BaseController
     {
-        private readonly ApplicationDbContext _context;
         private readonly ILogger<PostController> _logger;
 
         public PostController(ApplicationDbContext context, ILogger<PostController> logger)
+            : base(context)
         {
-            _context = context;
             _logger = logger;
         }
 
@@ -377,6 +376,9 @@ namespace MXH_ASP.NET_CORE.Controllers
         {
             try
             {
+                // Thiết lập thông tin người dùng hiện tại cho ViewBag
+                await SetCurrentUserInfo();
+                
                 // Lấy ID người dùng hiện tại
                 int? currentUserId = null;
                 if (User.Identity.IsAuthenticated)
